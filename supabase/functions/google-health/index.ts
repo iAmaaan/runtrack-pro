@@ -72,8 +72,11 @@ async function decryptToken(value: string) {
   return new TextDecoder().decode(plaintext);
 }
 function requireConfig() {
-  if (!GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET || !GOOGLE_REDIRECT_URI || !SERVICE_KEY) {
-    throw new Error("Google Health integration is not configured. Add the Google OAuth and Supabase function secrets.");
+  if (!GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET || !GOOGLE_REDIRECT_URI || !SERVICE_KEY || !TOKEN_KEY_B64) {
+    throw new Error("Google Health integration is not configured. Add the Google OAuth and token-encryption secrets.");
+  }
+  if (unb64(TOKEN_KEY_B64).length !== 32) {
+    throw new Error("GOOGLE_TOKEN_ENCRYPTION_KEY must be a base64-encoded 32-byte key.");
   }
 }
 async function tokenRequest(params: Record<string, string>) {
@@ -254,7 +257,7 @@ async function handleAction(action: string, syncCode: string) {
     let pageToken = "";
     const runs: any[] = [];
     for (let page = 0; page < 10; page++) {
-      const apiUrl = new URL("https://health.googleapis.com/v4/users/me/dataTypes/exercise/dataPoints");
+      const apiUrl = new URL("https://health.googleapis.com/v4/users/me/dataTypes/exercise/dataPoints:reconcile");
       apiUrl.searchParams.set("pageSize", "25");
       apiUrl.searchParams.set("filter", filter);
       if (pageToken) apiUrl.searchParams.set("pageToken", pageToken);
