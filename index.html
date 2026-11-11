@@ -31,7 +31,7 @@
 <div class="footer">RUNTRACK INTELLIGENCE · TCX PARSER V2 · LOCAL-FIRST · NOT AFFILIATED WITH FITBIT OR GOOGLE</div>
 </main></div></div>
 <input id="fileInput" type="file" accept=".tcx,application/xml,text/xml" multiple hidden><div class="modal" id="runModal"><div class="modalbox"><div class="modalhead"><div><div class="kicker">SESSION DEEP DIVE</div><h2 id="modalTitle">Run details</h2><div class="sub" id="modalDate"></div></div><button class="close" id="modalClose">✕</button></div><div class="grid" id="modalMetrics" style="margin-top:16px"></div><div class="twocol"><div class="card"><div class="cardhead"><h3>Pace profile</h3><span>MIN / KM</span></div><div id="modalPace"></div></div><div class="card"><div class="cardhead"><h3>Heart-rate profile</h3><span>BPM</span></div><div id="modalHr"></div></div></div><div class="card" style="margin-top:13px"><div class="cardhead"><h3>Kilometre splits</h3><span>PACE</span></div><div id="modalSplits"></div></div></div></div><div class="toast" id="toast"></div>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.95.0/dist/umd/supabase.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.119.0"></script>
 <script>
 "use strict";
 const KEY="runtrack_pro_v1",SETKEY="rt_settings",DELKEY="rt_deleted_runs",SYNCKEY="rt_sync_code",SUPABASE_URL="https://vetmhkrempjtwuojupfr.supabase.co",SUPABASE_KEY="sb_publishable_NTuvMZo_dNDbwr-FXZ1dvA_7GjoSuKP",GOOGLE_HEALTH_FN="https://vetmhkrempjtwuojupfr.supabase.co/functions/v1/google-health",byId=id=>document.getElementById(id);
