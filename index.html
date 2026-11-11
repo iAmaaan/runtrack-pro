@@ -1,0 +1,269 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0b0e0d">
+<title>RunTrack Pro — Running Analytics</title>
+<style>
+:root{color-scheme:dark;--bg:#0b0e0d;--panel:#141a17;--panel2:#1b231e;--line:#29332d;--muted:#91a097;--text:#edf4ef;--lime:#c7f36b;--red:#ff7777}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:15px/1.5 Inter,system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+button,input{font:inherit}.shell{max-width:1440px;margin:auto;padding:24px}.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;gap:16px}.brand{font-weight:900;letter-spacing:.12em;font-size:20px}.brand span{color:var(--lime)}.tag,.sub,.muted{color:var(--muted);font-size:12px}.topright{display:flex;align-items:center;gap:12px}
+.btn{border:0;border-radius:10px;padding:11px 16px;background:var(--lime);color:#11170c;font-weight:800;cursor:pointer}.btn:hover{background:#d8ff87}.btn.secondary{background:var(--panel2);border:1px solid var(--line);color:var(--text)}.btn.danger{color:var(--red)}
+.layout{display:grid;grid-template-columns:220px minmax(0,1fr);gap:24px}.side{border-right:1px solid var(--line);padding-right:18px}.nav{display:grid;gap:7px;position:sticky;top:20px}.nav button{text-align:left;background:transparent;border:0;color:var(--muted);padding:12px;border-radius:10px;cursor:pointer}.nav button.active,.nav button:hover{background:var(--panel2);color:var(--text)}main{min-width:0}.heading{display:flex;justify-content:space-between;align-items:end;margin-bottom:20px;gap:15px}.eyebrow{color:var(--lime);text-transform:uppercase;letter-spacing:.13em;font-size:11px;font-weight:800}.heading h1{font-size:30px;line-height:1.1;margin:5px 0}.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}.card{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:17px;min-width:0}.metric-label{font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted)}.metric{font-size:29px;font-weight:800;letter-spacing:-.04em;margin:8px 0 0}.unit{font-size:13px;color:var(--muted);font-weight:500}.delta{font-size:11px;color:var(--lime);margin-top:3px}.sectiongrid{display:grid;grid-template-columns:1.35fr 1fr;gap:12px;margin-top:12px}.cardhead{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}.cardhead h3{font-size:14px;margin:0}.cardhead span{font-size:11px;color:var(--muted)}.chart{height:190px;width:100%;display:block}.chart text{fill:var(--muted);font-size:10px}.chart .gridline{stroke:var(--line);stroke-dasharray:3 5}.chart .line{fill:none;stroke:var(--lime);stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}.chart .area{fill:url(#fade)}
+.empty{padding:30px 15px;text-align:center;color:var(--muted);border:1px dashed #39463e;border-radius:12px}.empty strong{display:block;color:var(--text);margin:8px}.drop{border:1px dashed #52614f;background:#141b15;border-radius:13px;padding:22px;text-align:center;cursor:pointer;margin-top:14px}.drop.drag{border-color:var(--lime);background:#1c2817}.drop b{display:block;margin:5px}.drop small{color:var(--muted)}
+.tablewrap{overflow:auto}table{width:100%;border-collapse:collapse;white-space:nowrap}th,td{text-align:left;padding:12px 10px;border-bottom:1px solid var(--line);font-size:12px}th{color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.07em;font-size:10px}td strong{font-size:13px}
+.hidden{display:none!important}.detailgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.detailmetric{background:var(--panel2);border-radius:10px;padding:13px}.detailmetric .metric{font-size:22px}.splitbar{height:6px;background:var(--line);border-radius:10px;overflow:hidden}.splitbar i{display:block;height:100%;background:var(--lime)}.notice{color:var(--muted);font-size:12px;margin-top:12px}.footer{color:#64736a;font-size:11px;margin-top:24px;text-align:center}
+input[type=number]{background:#0b0d0c;color:white;border:1px solid var(--line);padding:10px;border-radius:8px;width:150px}.pill{font-size:10px;padding:4px 8px;border-radius:20px;background:#26331d;color:var(--lime)}
+@media(max-width:900px){.layout{grid-template-columns:1fr}.side{border:0;padding:0}.nav{display:flex;overflow:auto;position:static}.nav button{white-space:nowrap}.grid{grid-template-columns:repeat(2,1fr)}.sectiongrid{grid-template-columns:1fr}}
+@media(max-width:520px){.shell{padding:15px}.heading{align-items:start;flex-direction:column}.heading h1{font-size:25px}.metric{font-size:25px}.top{margin-bottom:18px}.grid{gap:8px}.card{padding:13px}.detailgrid{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+<div class="shell">
+<header class="top">
+ <div><div class="brand">RUN<span>TRACK</span> PRO</div><div class="tag">PERSONAL RUNNING INTELLIGENCE</div></div>
+ <div class="topright"><button class="btn" id="topUpload">＋ Upload run</button><div class="pill">LOCAL-FIRST</div></div>
+</header>
+<div class="layout">
+<aside class="side"><nav class="nav">
+ <button class="active" data-page="overview">◈ Overview</button>
+ <button data-page="history">▤ Run history</button>
+ <button data-page="analysis">⌁ Performance</button>
+ <button data-page="records">◆ Personal records</button>
+ <button data-page="settings">⚙ Data & settings</button>
+</nav></aside>
+<main>
+<section id="page-overview">
+ <div class="heading"><div><div class="eyebrow">YOUR RUNNING AT A GLANCE</div><h1>Overview</h1><div class="sub" id="todayLabel">Your training, all in one place.</div></div><button class="btn secondary" id="exportBtn">⇩ Export data</button></div>
+ <div class="grid" id="metrics">
+  <div class="card"><div class="metric-label">Total distance</div><div class="metric" id="totalDistance">0.00 <span class="unit">km</span></div><div class="delta">All recorded activities</div></div>
+  <div class="card"><div class="metric-label">Total runs</div><div class="metric" id="totalRuns">0</div><div class="delta">Activities saved</div></div>
+  <div class="card"><div class="metric-label">Average pace</div><div class="metric" id="avgPace">—</div><div class="delta">Min / km</div></div>
+  <div class="card"><div class="metric-label">Best 5K</div><div class="metric" id="best5k">—</div><div class="delta">Estimated from GPS samples</div></div>
+ </div>
+ <div class="sectiongrid">
+  <div class="card"><div class="cardhead"><h3>Distance trend</h3><span>Last 8 weeks · km</span></div><div id="distanceChart"></div></div>
+  <div class="card"><div class="cardhead"><h3>Pace trend</h3><span>Lower is faster · min/km</span></div><div id="paceChart"></div></div>
+ </div>
+ <div class="sectiongrid">
+  <div class="card"><div class="cardhead"><h3>Recent activities</h3><button class="btn secondary" data-goto="history">View all</button></div><div id="recentRuns"></div></div>
+  <div class="card"><div class="cardhead"><h3>Training snapshot</h3><span>Last 7 days</span></div>
+   <div class="detailgrid">
+    <div class="detailmetric"><div class="metric-label">Distance</div><div class="metric" id="weekDistance">0 km</div></div>
+    <div class="detailmetric"><div class="metric-label">Runs</div><div class="metric" id="weekRuns">0</div></div>
+    <div class="detailmetric"><div class="metric-label">Avg HR</div><div class="metric" id="weekHr">—</div></div>
+    <div class="detailmetric"><div class="metric-label">Longest</div><div class="metric" id="longestRun">—</div></div>
+   </div>
+   <p class="notice">Training-load and recovery scores become more reliable after several weeks of consistent uploads.</p>
+  </div>
+ </div>
+ <div class="drop" id="dropzone"><div style="font-size:25px">⇧</div><b>Drop your Fitbit TCX files here</b><small>or click Upload run · Multiple files supported</small></div>
+</section>
+<section id="page-history" class="hidden">
+ <div class="heading"><div><div class="eyebrow">YOUR ACTIVITY LOG</div><h1>Run history</h1><div class="sub">Every uploaded TCX activity, stored in this browser.</div></div><button class="btn" id="historyUpload">＋ Upload run</button></div>
+ <div class="card"><div class="tablewrap" id="historyTable"></div></div>
+</section>
+<section id="page-analysis" class="hidden">
+ <div class="heading"><div><div class="eyebrow">DEEP DIVE</div><h1>Performance analysis</h1><div class="sub">Understand pace, heart rate, endurance and training consistency.</div></div></div>
+ <div class="grid">
+  <div class="card"><div class="metric-label">Average heart rate</div><div class="metric" id="allHr">—</div><div class="delta">BPM · recorded runs</div></div>
+  <div class="card"><div class="metric-label">Max heart rate</div><div class="metric" id="maxHr">—</div><div class="delta">BPM · recorded runs</div></div>
+  <div class="card"><div class="metric-label">Average cadence</div><div class="metric" id="cadence">—</div><div class="delta">Steps per minute, if present</div></div>
+  <div class="card"><div class="metric-label">Elevation gain</div><div class="metric" id="elevation">0 <span class="unit">m</span></div><div class="delta">Accumulated recorded ascent</div></div>
+ </div>
+ <div class="sectiongrid">
+  <div class="card"><div class="cardhead"><h3>Heart-rate distribution</h3><span>Estimated zones</span></div><div id="hrZones"></div><p class="notice">Zones use an estimated maximum HR of 220 minus age until you set a tested or known maximum. They are guides, not medical measurements.</p></div>
+  <div class="card"><div class="cardhead"><h3>Training load</h3><span>Recent 7 days</span></div><div id="loadPanel"></div><p class="notice">Session load is estimated from duration and heart rate (TRIMP-style). It is not a clinical readiness score.</p></div>
+ </div>
+ <div class="card" style="margin-top:12px"><div class="cardhead"><h3>How to read your trends</h3></div><p class="sub">Compare pace at similar heart rates rather than chasing speed alone. A lower pace (fewer minutes per kilometre) at the same effort can indicate improving aerobic efficiency. Increase weekly distance gradually and include easy days.</p></div>
+</section>
+<section id="page-records" class="hidden">
+ <div class="heading"><div><div class="eyebrow">MILESTONES</div><h1>Personal records</h1><div class="sub">Best performances calculated from uploaded GPS trackpoints.</div></div></div>
+ <div class="grid" id="recordCards"></div><p class="notice">Short-distance records are estimated from GPS samples and interpolated at the target distance. They may differ from official race results.</p>
+</section>
+<section id="page-settings" class="hidden">
+ <div class="heading"><div><div class="eyebrow">YOUR DATA</div><h1>Data & settings</h1><div class="sub">Your activity files stay in this browser on this device.</div></div></div>
+ <div class="card" style="max-width:680px">
+  <h3>Profile settings</h3><label class="sub" for="ageInput">Age (used for estimated heart-rate zones)</label><p><input id="ageInput" type="number" min="13" max="100" value="26"></p>
+  <label class="sub" for="maxHrInput">Known maximum heart rate (optional; overrides age estimate)</label><p><input id="maxHrInput" type="number" min="100" max="230" placeholder="e.g. 190"></p>
+  <button class="btn" id="saveSettings">Save settings</button>
+  <hr style="border:0;border-top:1px solid var(--line);margin:22px 0"><h3>Backup & restore</h3><p class="sub">Export all parsed activity data as JSON for backup. Import a backup on another browser to restore it.</p>
+  <button class="btn secondary" id="exportBtn2">⇩ Download backup</button> <label class="btn secondary" for="backupInput">⇧ Restore backup</label><input id="backupInput" type="file" accept="application/json" hidden>
+  <hr style="border:0;border-top:1px solid var(--line);margin:22px 0"><h3 style="color:var(--red)">Delete all activities</h3><p class="sub">This permanently clears this browser's RunTrack data.</p><button class="btn secondary danger" id="clearBtn">Delete all data</button>
+ </div>
+</section>
+<div class="footer">RUNTRACK PRO · TCX IMPORT · LOCAL-FIRST MVP · Not affiliated with Fitbit or Google</div>
+</main></div></div>
+<input id="fileInput" type="file" accept=".tcx,application/xml,text/xml" multiple hidden>
+<script>
+"use strict";
+const KEY="runtrack_pro_v1";
+let runs=load();
+let settings=JSON.parse(localStorage.getItem("rt_settings")||'{"age":26,"maxHr":null}');
+const byId=id=>document.getElementById(id);
+function load(){try{return JSON.parse(localStorage.getItem(KEY)||"[]")}catch(e){return []}}
+function save(){localStorage.setItem(KEY,JSON.stringify(runs))}
+function fmtTime(s){if(!Number.isFinite(s)||s<0)return "—";let h=Math.floor(s/3600),m=Math.floor(s%3600/60),sec=Math.round(s%60);return h?String(h)+":"+String(m).padStart(2,"0")+":"+String(sec).padStart(2,"0"):String(m)+":"+String(sec).padStart(2,"0")}
+function pace(s){if(!Number.isFinite(s)||s<=0)return "—";let m=Math.floor(s/60),v=Math.round(s%60);if(v===60){m++;v=0}return m+":"+String(v).padStart(2,"0")}
+function dateStr(d){return new Date(d).toLocaleDateString(undefined,{day:"numeric",month:"short",year:"numeric"})}
+function esc(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+function haversine(a,b,c,d){const R=6371000,rad=x=>x*Math.PI/180,dl=rad(c-a),dn=rad(d-b),x=Math.sin(dl/2)**2+Math.cos(rad(a))*Math.cos(rad(c))*Math.sin(dn/2)**2;return 2*R*Math.asin(Math.sqrt(x))}
+function parseTCX(xml,name){
+ const doc=new DOMParser().parseFromString(xml,"application/xml");
+ if(doc.querySelector("parsererror"))throw Error("This file is not valid TCX/XML.");
+ const nodes=[...doc.getElementsByTagNameNS("*","Trackpoint")];
+ if(!nodes.length)throw Error("No GPS trackpoints found in this TCX file.");
+ const pts=[];
+ for(const n of nodes){
+  const get=t=>n.getElementsByTagNameNS("*",t)[0]?.textContent;
+  const time=get("Time"),lat=get("LatitudeDegrees"),lon=get("LongitudeDegrees"),alt=get("AltitudeMeters"),dist=get("DistanceMeters"),hr=get("Value"),cad=get("Cadence");
+  const p={t:time?new Date(time).getTime():null,lat:lat==null?null:+lat,lon:lon==null?null:+lon,alt:alt==null?null:+alt,dist:dist==null?null:+dist,hr:hr==null?null:+hr,cad:cad==null?null:+cad};
+  if(Number.isFinite(p.t))pts.push(p);
+ }
+ if(pts.length<2)throw Error("Not enough timestamped trackpoints.");
+ pts.sort((a,b)=>a.t-b.t);
+ const first=pts[0],last=pts[pts.length-1],valid=pts.filter(p=>Number.isFinite(p.lat)&&Number.isFinite(p.lon)&&Math.abs(p.lat)<=90&&Math.abs(p.lon)<=180);
+ let gpsTotal=0;for(let i=1;i<pts.length;i++){const a=pts[i-1],b=pts[i];if(Number.isFinite(a.lat)&&Number.isFinite(b.lat))gpsTotal+=haversine(a.lat,a.lon,b.lat,b.lon)}
+ const distPts=pts.filter(p=>Number.isFinite(p.dist));
+ let distance=distPts.length>1?Math.max(0,distPts[distPts.length-1].dist-distPts[0].dist):0;
+ if(distance<10)distance=gpsTotal;
+ if(distance<10)throw Error("Could not determine a valid distance from this file.");
+ let cumulative=0;
+ const hasDist=distPts.length>1;
+ for(let i=0;i<pts.length;i++){
+  if(hasDist&&Number.isFinite(pts[i].dist))pts[i].cum=Math.max(0,pts[i].dist-distPts[0].dist);
+  else if(i>0){const a=pts[i-1],b=pts[i];if(Number.isFinite(a.lat)&&Number.isFinite(b.lat))cumulative+=haversine(a.lat,a.lon,b.lat,b.lon);pts[i].cum=cumulative}
+  else pts[i].cum=0;
+ }
+ if(hasDist){for(const p of pts)if(!Number.isFinite(p.cum))p.cum=cumulative}
+ const duration=(last.t-first.t)/1000,hrs=pts.map(p=>p.hr).filter(Number.isFinite),cads=pts.map(p=>p.cad).filter(Number.isFinite);
+ let ascent=0;for(let i=1;i<pts.length;i++)if(Number.isFinite(pts[i].alt)&&Number.isFinite(pts[i-1].alt)&&pts[i].alt>pts[i-1].alt)ascent+=pts[i].alt-pts[i-1].alt;
+ const splits=makeSplits(pts,distance);
+ return {id:crypto.randomUUID?crypto.randomUUID():String(Date.now()+Math.random()),name:name.replace(/\.tcx$/i,""),date:new Date(first.t).toISOString(),start:first.t,end:last.t,distance,duration,pace:duration/(distance/1000),avgHr:hrs.length?hrs.reduce((a,b)=>a+b,0)/hrs.length:null,maxHr:hrs.length?Math.max(...hrs):null,avgCad:cads.length?cads.reduce((a,b)=>a+b,0)/cads.length:null,elevation:ascent,calories:null,points:pts.map(p=>({t:p.t,dist:p.cum,lat:p.lat,lon:p.lon,alt:p.alt,hr:p.hr,cad:p.cad})),track:valid.map(p=>[p.lat,p.lon]),splits,source:"TCX"};
+}
+function makeSplits(pts,total){
+ const out=[];let target=1000,previous=pts[0];
+ for(let i=1;i<pts.length;i++){
+  const cur=pts[i],d0=previous.cum,d1=cur.cum;
+  if(Number.isFinite(d0)&&Number.isFinite(d1)&&d1>d0){
+   while(target<=d1&&target<=total){
+    if(target>d0){const f=(target-d0)/(d1-d0),t=previous.t+(cur.t-previous.t)*f;const prior=out.length?out[out.length-1].t0:pts[0].t;out.push({km:target/1000,seconds:(t-prior)/1000,t0:t})}
+    target+=1000;
+   }
+  }
+  previous=cur;
+ }
+ return out.map(x=>({km:x.km,seconds:x.seconds}));
+}
+async function importFiles(files){
+ let added=0;
+ for(const f of files){
+  if(!/\.tcx$/i.test(f.name)){alert(f.name+": Please select a .tcx file.");continue}
+  try{
+   const r=parseTCX(await f.text(),f.name);
+   const duplicate=runs.some(x=>Math.abs(x.start-r.start)<1000&&Math.abs(x.distance-r.distance)<20);
+   if(duplicate){alert(f.name+": this activity appears to be already imported.");continue}
+   runs.push(r);added++;
+  }catch(e){alert(f.name+": "+e.message)}
+ }
+ if(added){save();render();alert("Imported "+added+" run"+(added===1?"":"s")+".")}
+}
+function nav(page){
+ document.querySelectorAll("main section").forEach(s=>s.classList.add("hidden"));
+ byId("page-"+page).classList.remove("hidden");
+ document.querySelectorAll(".nav button").forEach(b=>b.classList.toggle("active",b.dataset.page===page));
+}
+document.querySelectorAll(".nav button").forEach(b=>b.onclick=()=>nav(b.dataset.page));
+document.querySelectorAll("[data-goto]").forEach(b=>b.onclick=()=>nav(b.dataset.goto));
+function svgChart(data,reverse){
+ if(!data.length)return '<div class="empty">Your chart will appear after your first upload.<strong>Upload a TCX activity to begin.</strong></div>';
+ const w=600,h=190,p=28,vals=data.map(x=>x.v);let min=Math.min(...vals),max=Math.max(...vals);if(min===max){min-=1;max+=1}
+ const pts=data.map((x,i)=>[p+i*(w-2*p)/Math.max(1,data.length-1),h-p-(x.v-min)/(max-min)*(h-2*p)]);
+ if(reverse)pts.reverse();
+ const path=pts.map((a,i)=>(i?"L":"M")+a[0].toFixed(1)+","+a[1].toFixed(1)).join(" ");
+ const labels=data.map((x,i)=>i===0||i===data.length-1?'<text x="'+pts[i][0]+'" y="'+(h-5)+'" text-anchor="middle">'+esc(x.l)+"</text>":"").join("");
+ return '<svg class="chart" viewBox="0 0 '+w+" "+h+'" preserveAspectRatio="none"><defs><linearGradient id="fade" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#c7f36b" stop-opacity=".22"/><stop offset="1" stop-color="#c7f36b" stop-opacity="0"/></linearGradient></defs><path class="gridline" d="M'+p+" 35H"+(w-p)+" M"+p+" 90H"+(w-p)+" M"+p+" 145H"+(w-p)+'"/><path class="area" d="'+path+" L"+pts[pts.length-1][0]+" "+(h-p)+" L"+pts[0][0]+" "+(h-p)+' Z"/><path class="line" d="'+path+'"/>'+labels+"</svg>";
+}
+function recentMarkup(arr){
+ if(!arr.length)return '<div class="empty">No runs yet.<strong>Upload your first Fitbit TCX file.</strong></div>';
+ return '<div class="tablewrap"><table><thead><tr><th>Date</th><th>Distance</th><th>Time</th><th>Pace</th><th>Avg HR</th></tr></thead><tbody>'+arr.slice().sort((a,b)=>b.start-a.start).slice(0,5).map(r=>'<tr><td><strong>'+dateStr(r.date)+'</strong><div class="sub">'+esc(r.name)+'</div></td><td>'+(r.distance/1000).toFixed(2)+' km</td><td>'+fmtTime(r.duration)+'</td><td>'+pace(r.pace)+' /km</td><td>'+(r.avgHr?Math.round(r.avgHr)+" bpm":"—")+"</td></tr>").join("")+"</tbody></table></div>";
+}
+function bestFor(meters){
+ let best=Infinity;
+ for(const r of runs){
+  if(r.distance>=meters&&r.pace>0)best=Math.min(best,r.pace*meters/1000);
+  const pts=r.points||[];
+  for(let i=0;i<pts.length;i++){
+   if(!Number.isFinite(pts[i].dist))continue;
+   const target=pts[i].dist+meters;
+   let j=i+1;while(j<pts.length&&Number.isFinite(pts[j].dist)&&pts[j].dist<target)j++;
+   if(j<pts.length&&Number.isFinite(pts[j].dist)&&Number.isFinite(pts[j].t)&&Number.isFinite(pts[i].t)){
+    const elapsed=(pts[j].t-pts[i].t)/1000;
+    if(elapsed>0)best=Math.min(best,elapsed);
+   }
+  }
+ }
+ return Number.isFinite(best)?fmtTime(best):null;
+}
+function renderHistory(){
+ const el=byId("historyTable");
+ if(!runs.length){el.innerHTML='<div class="empty">No activities saved yet.<strong>Upload your first TCX file.</strong></div>';return}
+ el.innerHTML='<table><thead><tr><th>Date</th><th>Activity</th><th>Distance</th><th>Duration</th><th>Avg pace</th><th>Avg HR</th><th>Elevation</th><th></th></tr></thead><tbody>'+runs.slice().sort((a,b)=>b.start-a.start).map(r=>'<tr><td>'+dateStr(r.date)+'</td><td><strong>'+esc(r.name)+'</strong></td><td>'+(r.distance/1000).toFixed(2)+' km</td><td>'+fmtTime(r.duration)+'</td><td>'+pace(r.pace)+'</td><td>'+(r.avgHr?Math.round(r.avgHr)+" bpm":"—")+'</td><td>'+Math.round(r.elevation||0)+' m</td><td><button class="btn secondary" onclick="showRun(\''+r.id+'\')">Details</button> <button class="btn secondary danger" onclick="deleteRun(\''+r.id+'\')">Delete</button></td></tr>').join("")+"</tbody></table>";
+}
+function showRun(id){
+ const r=runs.find(x=>x.id===id);if(!r)return;
+ const s=r.splits||[];
+ alert(r.name+"\n"+dateStr(r.date)+"\n\nDistance: "+(r.distance/1000).toFixed(2)+" km\nTime: "+fmtTime(r.duration)+"\nPace: "+pace(r.pace)+" /km\nAvg HR: "+(r.avgHr?Math.round(r.avgHr)+" bpm":"Not recorded")+"\nMax HR: "+(r.maxHr?Math.round(r.maxHr)+" bpm":"Not recorded")+"\nElevation gain: "+Math.round(r.elevation||0)+" m\n\nSplits: "+(s.length?s.map(x=>x.km.toFixed(0)+" km "+fmtTime(x.seconds)).join(" | "):"Not available"));
+}
+function deleteRun(id){if(confirm("Delete this run?")){runs=runs.filter(x=>x.id!==id);save();render()}}
+window.showRun=showRun;window.deleteRun=deleteRun;
+function renderAnalysis(){
+ const hrRuns=runs.filter(r=>r.avgHr),all=hrRuns.flatMap(r=>(r.points||[]).map(p=>p.hr).filter(Number.isFinite));
+ byId("allHr").textContent=hrRuns.length?Math.round(hrRuns.reduce((s,r)=>s+r.avgHr,0)/hrRuns.length)+" bpm":"—";
+ byId("maxHr").textContent=all.length?Math.max(...all)+" bpm":"—";
+ const cad=runs.filter(r=>r.avgCad);byId("cadence").textContent=cad.length?Math.round(cad.reduce((s,r)=>s+r.avgCad,0)/cad.length):"—";
+ byId("elevation").innerHTML=Math.round(runs.reduce((s,r)=>s+(r.elevation||0),0))+' <span class="unit">m</span>';
+ const max=settings.maxHr||Math.round(220-settings.age),zones=[["Easy",.5,.6],["Aerobic",.6,.7],["Tempo",.7,.8],["Threshold",.8,.9],["High intensity",.9,1]],counts=zones.map(z=>({name:z[0],count:all.filter(h=>h>=max*z[1]&&h<max*z[2]).length})),total=counts.reduce((s,z)=>s+z.count,0);
+ byId("hrZones").innerHTML=total?counts.map(z=>'<div style="margin:13px 0"><div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:6px"><span>'+z.name+'</span><span class="sub">'+Math.round(z.count/total*100)+'%</span></div><div class="splitbar"><i style="width:'+(z.count/total*100)+'%"></i></div></div>').join(""):'<div class="empty">Heart-rate zones appear after importing runs with HR data.</div>';
+ const last7=runs.filter(r=>Date.now()-r.start<7*864e5),load=last7.reduce((s,r)=>s+(r.avgHr?(r.duration/60)*Math.max(.5,(r.avgHr-60)/Math.max(1,max-60)):r.duration/60*.5),0);
+ byId("loadPanel").innerHTML='<div class="metric">'+Math.round(load)+' <span class="unit">load points</span></div><p class="sub">'+last7.length+' sessions · '+Math.round(last7.reduce((s,r)=>s+r.duration,0)/60)+' active minutes</p><div class="splitbar"><i style="width:'+Math.min(100,load/4)+'%"></i></div>';
+}
+function renderRecords(){
+ const items=[["Fastest 1K",bestFor(1000)],["Fastest 3K",bestFor(3000)],["Fastest 5K",bestFor(5000)],["Fastest 10K",bestFor(10000)],["Longest run",runs.length?(Math.max(...runs.map(r=>r.distance))/1000).toFixed(2)+" km":null],["Most elevation",runs.length?Math.max(...runs.map(r=>r.elevation||0)).toFixed(0)+" m":null]];
+ byId("recordCards").innerHTML=items.map(x=>'<div class="card"><div class="metric-label">'+x[0]+'</div><div class="metric">'+(x[1]||"—")+'</div><div class="delta">'+(x[1]?"Based on uploaded runs":"Awaiting data")+"</div></div>").join("");
+}
+function render(){
+ runs.sort((a,b)=>a.start-b.start);
+ const dist=runs.reduce((s,r)=>s+r.distance,0),dur=runs.reduce((s,r)=>s+r.duration,0);
+ byId("totalDistance").innerHTML=(dist/1000).toFixed(2)+' <span class="unit">km</span>';
+ byId("totalRuns").textContent=runs.length;
+ byId("avgPace").textContent=dist?pace(dur/(dist/1000)):"—";
+ byId("best5k").textContent=bestFor(5000)||"—";
+ byId("recentRuns").innerHTML=recentMarkup(runs);
+ const now=Date.now(),week=runs.filter(r=>now-r.start<=7*864e5),weekDist=week.reduce((s,r)=>s+r.distance,0);
+ byId("weekDistance").textContent=(weekDist/1000).toFixed(1)+" km";byId("weekRuns").textContent=week.length;
+ const wh=week.filter(r=>r.avgHr);byId("weekHr").textContent=wh.length?Math.round(wh.reduce((s,r)=>s+r.avgHr,0)/wh.length)+" bpm":"—";
+ const longest=runs.reduce((a,b)=>b.distance>a.distance?b:a,null);byId("longestRun").textContent=longest?(longest.distance/1000).toFixed(1)+" km":"—";
+ const weekly=[];for(let i=7;i>=0;i--){const end=now-i*7*864e5,start=end-7*864e5,rs=runs.filter(r=>r.start>=start&&r.start<end);weekly.push({l:i===0?"Now":String(i)+"w",v:rs.reduce((s,r)=>s+r.distance,0)/1000})}
+ byId("distanceChart").innerHTML=svgChart(weekly,false);
+ byId("paceChart").innerHTML=svgChart(runs.filter(r=>r.distance>500&&r.pace<1800).slice(-12).map((r,i)=>({l:String(i+1),v:r.pace})),true);
+ renderHistory();renderAnalysis();renderRecords();
+}
+function exportData(){
+ const blob=new Blob([JSON.stringify({version:1,exportedAt:new Date().toISOString(),settings,runs},null,2)],{type:"application/json"}),a=document.createElement("a");
+ a.href=URL.createObjectURL(blob);a.download="runtrack-backup.json";a.click();URL.revokeObjectURL(a.href);
+}
+function openPicker(){byId("fileInput").click()}
+byId("topUpload").onclick=openPicker;byId("historyUpload").onclick=openPicker;
+byId("fileInput").onchange=e=>{importFiles(e.target.files);e.target.value=""};
+byId("exportBtn").onclick=exportData;byId("exportBtn2").onclick=exportData;
+byId("saveSettings").onclick=()=>{settings.age=+byId("ageInput").value||26;settings.maxHr=+byId("maxHrInput").value||null;localStorage.setItem("rt_settings",JSON.stringify(settings));renderAnalysis();alert("Settings saved.")};
+byId("ageInput").value=settings.age;byId("maxHrInput").value=settings.maxHr||"";
+byId("clearBtn").onclick=()=>{if(confirm("Delete all imported activities from this browser?")){runs=[];save();render()}};
+byId("backupInput").onchange=async e=>{try{const b=JSON.parse(await e.target.files[0].text());if(!Array.isArray(b.runs))throw Error("Invalid backup file");if(confirm("Restore "+b.runs.length+" activities? This replaces current data.")){runs=b.runs;settings=b.settings||settings;save();localStorage.setItem("rt_settings",JSON.stringify(settings));byId("ageInput").value=settings.age;byId("maxHrInput").value=settings.maxHr||"";render();alert("Backup restored.")}}catch(err){alert(err.message)}e.target.value=""};
+const drop=byId("dropzone");
+drop.onclick=openPicker;drop.ondragover=e=>{e.preventDefault();drop.classList.add("drag")};drop.ondragleave=()=>drop.classList.remove("drag");drop.ondrop=e=>{e.preventDefault();drop.classList.remove("drag");importFiles([...e.dataTransfer.files])};
+render();byId("todayLabel").textContent=new Date().toLocaleDateString(undefined,{weekday:"long",day:"numeric",month:"long",year:"numeric"});
+</script>
+</body></html>
