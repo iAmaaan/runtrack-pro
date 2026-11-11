@@ -121,7 +121,7 @@ async function bootCloudAuth(){
     if(username!=="amaan"){err.textContent="Incorrect user ID or password.";return;}
     btn.disabled=true;btn.textContent="Connecting…";
     try{
-      const {data,error}=await cloudClient.auth.signInWithPassword({email:"amaan@runtrack-pro.app",password});
+      const {data,error}=await cloudClient.auth.signInWithPassword({email:"amanqureshi313@gmail.com",password});
       if(error)throw error;
       cloudUser=data.user;
       const {data:cloud,error:readError}=await cloudClient.from("runtrack_data").select("payload").eq("user_id",cloudUser.id).maybeSingle();
