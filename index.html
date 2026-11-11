@@ -10,7 +10,7 @@
 </style></head>
 <body>
 <div class="app">
-<header class="top"><div class="brand"><div class="logo">↗</div><div>RUN<span>TRACK</span> <span style="color:#eef4fb">/ INTELLIGENCE</span></div></div><div class="topright"><span class="status" id="syncStatus">● LOCAL MODE</span><button class="btn" id="topUpload">＋ Import activity</button></div></header>
+<header class="top"><div class="brand"><div class="logo">↗</div><div>RUN<span>TRACK</span> <span style="color:#eef4fb">/ INTELLIGENCE</span></div></div><div class="topright"><span class="status" id="syncStatus">● LOCAL MODE</span><span id="accountEmail" style="color:var(--muted);font-size:11px;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span><button class="btn ghost small" id="googleSignInBtn">Continue with Google</button><button class="btn ghost small" id="signOutBtn" style="display:none">Sign out</button><button class="btn" id="topUpload">＋ Import activity</button></div></header>
 <div class="layout"><aside class="side"><nav class="nav"><button class="active" data-page="overview">◈ &nbsp;Dashboard</button><button data-page="analytics">⌁ &nbsp;Analytics lab</button><button data-page="compare">⇄ &nbsp;Compare runs</button><button data-page="history">▤ &nbsp;Activity log</button><button data-page="records">◆ &nbsp;Records</button><button data-page="settings">⚙ &nbsp;Data & profile</button></nav><div class="navfoot">RUNNING IS A DATA GAME.<br>Show up. Log it. Get better.<br><br>TCX ENGINE · BUILD 2.0</div></aside>
 <main class="main">
 <section class="page active" id="page-overview"><div class="hero"><div><div class="kicker">PERSONAL PERFORMANCE SYSTEM</div><h1>Your running, decoded.</h1><div class="sub" id="todayLabel">Every kilometre tells a story.</div></div><div class="hero-actions"><select class="select" id="periodFilter"><option value="all">All time</option><option value="30">Last 30 days</option><option value="90">Last 90 days</option><option value="365">Last 12 months</option></select><button class="btn ghost" id="exportBtn">↓ Backup</button></div></div>
@@ -27,25 +27,113 @@
 <section class="page" id="page-compare"><div class="hero"><div><div class="kicker">HEAD-TO-HEAD</div><h1>Compare your runs.</h1><div class="sub">Put two sessions side by side and see what actually changed.</div></div></div><div class="card"><div class="compare-controls"><select class="select" id="runA"></select><select class="select" id="runB"></select></div><div id="compareOutput" style="margin-top:18px"></div></div><div class="twocol"><div class="card"><div class="cardhead"><h3>Overlay · pace by distance</h3><span>MIN / KM</span></div><div id="compareChart"></div><div class="legend"><span><i></i>Run A</span><span><i class="cyan"></i>Run B</span></div></div><div class="card"><div class="cardhead"><h3>Metric delta</h3><span>B MINUS A</span></div><div id="compareDelta"></div></div></div></section>
 <section class="page" id="page-history"><div class="hero"><div><div class="kicker">EVERY SESSION COUNTS</div><h1>Activity log.</h1><div class="sub">Search, inspect, compare or remove your imported runs.</div></div><button class="btn" id="historyUpload">＋ Import activity</button></div><div class="card"><div class="filters" style="margin-bottom:14px"><input class="input" id="historySearch" placeholder="Search activity name…" style="flex:1;min-width:150px"><select class="select" id="sortHistory"><option value="new">Newest first</option><option value="old">Oldest first</option><option value="distance">Longest distance</option><option value="pace">Fastest pace</option></select></div><div class="tablewrap" id="historyTable"></div></div></section>
 <section class="page" id="page-records"><div class="hero"><div><div class="kicker">YOUR HALL OF FAME</div><h1>Personal records.</h1><div class="sub">Best efforts found inside your uploaded GPS tracks.</div></div></div><div class="grid" id="recordCards"></div><div class="card" style="margin-top:13px"><div class="cardhead"><h3>Milestone board</h3><span>KEEP CHASING IT</span></div><div id="milestones"></div><p class="sub">GPS-derived estimates can differ from official race timing, especially on short or noisy tracks.</p></div></section>
-<section class="page" id="page-settings"><div class="hero"><div><div class="kicker">CONTROL YOUR DATA</div><h1>Profile & settings.</h1><div class="sub">Runner profile · Included in private cloud sync when connected.</div></div></div><div class="card" style="margin-bottom:13px"><div class="cardhead"><h3>Private cloud sync</h3><span id="syncState">NOT CONNECTED</span></div><p class="sub">Use one private sync code on your devices. Anyone with this code can access your running data, so keep it private and save a copy somewhere safe.</p><div class="filters" style="margin:14px 0 10px"><input class="input" id="syncCodeInput" type="text" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="Paste your private sync code" style="flex:1;min-width:220px"><button class="btn" id="createSyncBtn">＋ Create new code</button></div><div class="filters"><button class="btn ghost" id="connectSyncBtn">Connect this device</button><button class="btn ghost" id="syncNowBtn">↻ Sync now</button><button class="btn ghost" id="copySyncBtn">Copy code</button><button class="btn ghost" id="disconnectSyncBtn">Disconnect</button></div><p class="sub" id="syncHelp" style="margin-top:12px">Not connected. Create a code on your first device, then use the same code on your other devices.</p></div><div class="card" style="margin-bottom:13px"><div class="cardhead"><h3>Google Health · Fitbit</h3><span id="googleHealthState">NOT CONNECTED</span></div><p class="sub">Connect your Fitbit Air through Google Health. RunTrack imports workout summaries from the last 2 years: activity type, distance, duration, pace, calories and average heart rate when available. GPS routes and detailed heart-rate charts need additional permissions and are not included yet.</p><div class="filters" style="margin-top:12px"><button class="btn" id="googleHealthConnectBtn">Connect Google Health</button><button class="btn ghost" id="googleHealthSyncBtn">↻ Import Fitbit workouts</button><button class="btn ghost" id="googleHealthDisconnectBtn">Disconnect Google</button></div><p class="sub" id="googleHealthHelp" style="margin-top:12px">Connect your RunTrack cloud code first, then authorize your Google Health account. Your Google refresh token is encrypted before storage.</p></div><div class="settingsgrid"><div class="card"><h3>Runner profile</h3><p class="sub">Used only for estimated HR zones.</p><label class="metric-label">Age</label><p><input class="input" id="ageInput" type="number" min="13" max="100" value="26"></p><label class="metric-label">Known maximum heart rate (optional)</label><p><input class="input" id="maxHrInput" type="number" min="100" max="230" placeholder="e.g. 190"></p><button class="btn" id="saveSettings">Save profile</button></div><div class="card"><h3>Backup & restore</h3><p class="sub">Download all parsed runs as a JSON backup. Restore it on another browser or device.</p><button class="btn ghost" id="exportBtn2">↓ Download backup</button> <label class="btn ghost" for="backupInput">↑ Restore backup</label><input id="backupInput" type="file" accept="application/json" hidden><p class="sub" style="margin-top:16px">Your runs are saved in this browser. Download backups regularly to protect your data.</p></div><div class="card"><h3>Data health</h3><div id="dataHealth"></div></div><div class="card"><h3>Danger zone</h3><p class="sub">Permanently clear all activities saved in this browser.</p><button class="btn ghost" id="clearBtn" style="color:var(--red)">Delete all activities</button></div></div></section>
+<section class="page" id="page-settings"><div class="hero"><div><div class="kicker">CONTROL YOUR DATA</div><h1>Profile & settings.</h1><div class="sub">Runner profile · Included in private cloud sync when connected.</div></div></div><div class="card" id="accountCloudCard" style="margin-bottom:13px"><div class="cardhead"><h3>Google account · Cloud sync</h3><span id="accountState">NOT SIGNED IN</span></div><p class="sub">Sign in with your Google account once. Your TCX workouts and runner profile will then sync privately, so you can open RunTrack on any phone or computer.</p><div class="filters" style="margin-top:12px"><button class="btn" id="accountSignInBtn">Continue with Google</button><button class="btn ghost" id="accountSignOutBtn" style="display:none">Sign out</button></div><p class="sub" id="accountHelp" style="margin-top:12px">Not signed in. Your existing local activities stay on this device until you sign in and sync them to your account.</p></div><div class="card" id="legacySyncCard" style="margin-bottom:13px;display:none"><div class="cardhead"><h3>Private cloud sync</h3><span id="syncState">NOT CONNECTED</span></div><p class="sub">Use one private sync code on your devices. Anyone with this code can access your running data, so keep it private and save a copy somewhere safe.</p><div class="filters" style="margin:14px 0 10px"><input class="input" id="syncCodeInput" type="text" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="Paste your private sync code" style="flex:1;min-width:220px"><button class="btn" id="createSyncBtn">＋ Create new code</button></div><div class="filters"><button class="btn ghost" id="connectSyncBtn">Connect this device</button><button class="btn ghost" id="syncNowBtn">↻ Sync now</button><button class="btn ghost" id="copySyncBtn">Copy code</button><button class="btn ghost" id="disconnectSyncBtn">Disconnect</button></div><p class="sub" id="syncHelp" style="margin-top:12px">Not connected. Create a code on your first device, then use the same code on your other devices.</p></div><div class="card" id="legacyGoogleHealthCard" style="margin-bottom:13px;display:none"><div class="cardhead"><h3>Google Health · Fitbit</h3><span id="googleHealthState">NOT CONNECTED</span></div><p class="sub">Connect your Fitbit Air through Google Health. RunTrack imports workout summaries from the last 2 years: activity type, distance, duration, pace, calories and average heart rate when available. GPS routes and detailed heart-rate charts need additional permissions and are not included yet.</p><div class="filters" style="margin-top:12px"><button class="btn" id="googleHealthConnectBtn">Connect Google Health</button><button class="btn ghost" id="googleHealthSyncBtn">↻ Import Fitbit workouts</button><button class="btn ghost" id="googleHealthDisconnectBtn">Disconnect Google</button></div><p class="sub" id="googleHealthHelp" style="margin-top:12px">Connect your RunTrack cloud code first, then authorize your Google Health account. Your Google refresh token is encrypted before storage.</p></div><div class="settingsgrid"><div class="card"><h3>Runner profile</h3><p class="sub">Used only for estimated HR zones.</p><label class="metric-label">Age</label><p><input class="input" id="ageInput" type="number" min="13" max="100" value="26"></p><label class="metric-label">Known maximum heart rate (optional)</label><p><input class="input" id="maxHrInput" type="number" min="100" max="230" placeholder="e.g. 190"></p><button class="btn" id="saveSettings">Save profile</button></div><div class="card"><h3>Backup & restore</h3><p class="sub">Download all parsed runs as a JSON backup. Restore it on another browser or device.</p><button class="btn ghost" id="exportBtn2">↓ Download backup</button> <label class="btn ghost" for="backupInput">↑ Restore backup</label><input id="backupInput" type="file" accept="application/json" hidden><p class="sub" style="margin-top:16px">Your runs are saved in this browser. Download backups regularly to protect your data.</p></div><div class="card"><h3>Data health</h3><div id="dataHealth"></div></div><div class="card"><h3>Danger zone</h3><p class="sub">Permanently clear all activities saved in this browser.</p><button class="btn ghost" id="clearBtn" style="color:var(--red)">Delete all activities</button></div></div></section>
 <div class="footer">RUNTRACK INTELLIGENCE · TCX PARSER V2 · LOCAL-FIRST · NOT AFFILIATED WITH FITBIT OR GOOGLE</div>
 </main></div></div>
 <input id="fileInput" type="file" accept=".tcx,application/xml,text/xml" multiple hidden><div class="modal" id="runModal"><div class="modalbox"><div class="modalhead"><div><div class="kicker">SESSION DEEP DIVE</div><h2 id="modalTitle">Run details</h2><div class="sub" id="modalDate"></div></div><button class="close" id="modalClose">✕</button></div><div class="grid" id="modalMetrics" style="margin-top:16px"></div><div class="twocol"><div class="card"><div class="cardhead"><h3>Pace profile</h3><span>MIN / KM</span></div><div id="modalPace"></div></div><div class="card"><div class="cardhead"><h3>Heart-rate profile</h3><span>BPM</span></div><div id="modalHr"></div></div></div><div class="card" style="margin-top:13px"><div class="cardhead"><h3>Kilometre splits</h3><span>PACE</span></div><div id="modalSplits"></div></div></div></div><div class="toast" id="toast"></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.95.0/dist/umd/supabase.min.js"></script>
 <script>
 "use strict";
 const KEY="runtrack_pro_v1",SETKEY="rt_settings",DELKEY="rt_deleted_runs",SYNCKEY="rt_sync_code",SUPABASE_URL="https://vetmhkrempjtwuojupfr.supabase.co",SUPABASE_KEY="sb_publishable_NTuvMZo_dNDbwr-FXZ1dvA_7GjoSuKP",GOOGLE_HEALTH_FN="https://vetmhkrempjtwuojupfr.supabase.co/functions/v1/google-health",byId=id=>document.getElementById(id);
-let runs=loadRuns(),settings=loadSettings(),deletedRunIds=loadDeletedRunIds(),syncCode=localStorage.getItem(SYNCKEY)||"",syncTimer=null,syncBusy=false;
+const authClient=window.supabase?.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}})||null;
+let runs=loadRuns(),settings=loadSettings(),deletedRunIds=loadDeletedRunIds(),syncCode=localStorage.getItem(SYNCKEY)||"",syncTimer=null,syncBusy=false,accountUser=null,accountBusy=false,accountTimer=null,accountLoadedUserId="";
 function loadDeletedRunIds(){try{const x=JSON.parse(localStorage.getItem(DELKEY)||"[]");return Array.isArray(x)?x:[]}catch(e){return []}}
 
 function loadRuns(){try{const x=JSON.parse(localStorage.getItem(KEY)||"[]");return Array.isArray(x)?x:[]}catch(e){return []}}
 function loadSettings(){try{return Object.assign({age:26,maxHr:null},JSON.parse(localStorage.getItem(SETKEY)||"{}"))}catch(e){return {age:26,maxHr:null}}}
 function persistLocal(){try{localStorage.setItem(KEY,JSON.stringify(runs));localStorage.setItem(DELKEY,JSON.stringify(deletedRunIds));return true}catch(e){toast("Storage is full. Export a backup and remove older runs.");return false}}
-function persist(){const ok=persistLocal();if(ok&&syncCode)scheduleCloudSync();return ok}
+function persist(){const ok=persistLocal();if(ok&&syncCode)scheduleCloudSync();if(ok&&accountUser)scheduleAccountSave();return ok}
 function setSyncStatus(label,detail){const a=byId("syncStatus"),b=byId("syncState");if(a)a.textContent=label;if(b)b.textContent=detail||label.replace(/^● /,"")}
 function setSyncHelp(message){const el=byId("syncHelp");if(el)el.textContent=message}
 function syncSnapshot(){return {version:1,runs,settings,settingsUpdatedAt:Number(localStorage.getItem("rt_settings_updated")||0),deletedRunIds}}
 function mergeSyncSnapshots(local,remote){const tombstones=new Set([...(local.deletedRunIds||[]),...(remote.deletedRunIds||[])]),byRun=new Map();[...(local.runs||[]),...(remote.runs||[])].forEach(r=>{if(r&&r.id&&!tombstones.has(r.id)&&!byRun.has(r.id))byRun.set(r.id,r)});const localStamp=Number(local.settingsUpdatedAt||0),remoteStamp=Number(remote.settingsUpdatedAt||0);return {runs:[...byRun.values()],settings:remoteStamp>localStamp?(remote.settings||local.settings||{}):(local.settings||remote.settings||{}),settingsUpdatedAt:Math.max(localStamp,remoteStamp),deletedRunIds:[...tombstones]}}
 async function cloudRpc(name,args){const res=await fetch(SUPABASE_URL+"/rest/v1/rpc/"+name,{method:"POST",headers:{"Content-Type":"application/json","apikey":SUPABASE_KEY,"Authorization":"Bearer "+SUPABASE_KEY},body:JSON.stringify(args)});let data=null;try{data=await res.json()}catch(e){}if(!res.ok)throw new Error(data?.message||data?.hint||("Cloud request failed ("+res.status+"). Check the SQL setup."));return data}
+function renderAccount(){
+ const state=byId("accountState"),help=byId("accountHelp"),email=byId("accountEmail"),topIn=byId("googleSignInBtn"),topOut=byId("signOutBtn"),cardIn=byId("accountSignInBtn"),cardOut=byId("accountSignOutBtn");
+ if(accountUser){
+  const label=accountUser.email||"Google account";
+  if(state)state.textContent="SIGNED IN";
+  if(help)help.textContent="Signed in as "+label+". Your runs and profile are backed up to your private account.";
+  if(email)email.textContent=label;
+  if(topIn)topIn.style.display="none";if(cardIn)cardIn.style.display="none";
+  if(topOut)topOut.style.display="inline-flex";if(cardOut)cardOut.style.display="inline-flex";
+  setSyncStatus("● ACCOUNT SYNC","ACCOUNT SYNC");
+ }else{
+  if(state)state.textContent="NOT SIGNED IN";
+  if(help)help.textContent="Not signed in. Your existing local activities stay on this device until you sign in and sync them to your account.";
+  if(email)email.textContent="";
+  if(topIn)topIn.style.display="inline-flex";if(cardIn)cardIn.style.display="inline-flex";
+  if(topOut)topOut.style.display="none";if(cardOut)cardOut.style.display="none";
+  if(!syncCode)setSyncStatus("● LOCAL MODE","NOT SIGNED IN");
+ }
+}
+function scheduleAccountSave(){
+ if(!accountUser||accountBusy)return;
+ clearTimeout(accountTimer);
+ accountTimer=setTimeout(()=>accountSave(true),1500);
+}
+async function accountSave(silent){
+ if(!accountUser||!authClient)return;
+ try{
+  const {error}=await authClient.from("runtrack_data").upsert({user_id:accountUser.id,payload:syncSnapshot(),updated_at:new Date().toISOString()},{onConflict:"user_id"});
+  if(error)throw error;
+  if(byId("accountHelp"))byId("accountHelp").textContent="Signed in as "+(accountUser.email||"Google account")+". Last cloud sync: "+new Date().toLocaleString()+".";
+  setSyncStatus("● ACCOUNT SYNCED","ACCOUNT SYNCED");
+  if(!silent)toast("Your RunTrack data is saved to your Google account.");
+ }catch(e){
+  if(byId("accountHelp"))byId("accountHelp").textContent="Account sync failed: "+e.message;
+  setSyncStatus("● SYNC ERROR","SYNC ERROR");
+  if(!silent)toast("Account sync failed: "+e.message);
+ }
+}
+async function activateAccount(user){
+ if(!user||!authClient||accountLoadedUserId===user.id||accountBusy)return;
+ accountBusy=true;accountUser=user;accountLoadedUserId=user.id;renderAccount();
+ try{
+  const {data,error}=await authClient.from("runtrack_data").select("payload").eq("user_id",user.id).maybeSingle();
+  if(error)throw error;
+  let remote=data?.payload||null;
+  if(syncCode){
+   try{
+    const legacy=await cloudRpc("runtrack_sync_get",{p_code:syncCode});
+    if(legacy?.payload)remote=remote?mergeSyncSnapshots(remote,legacy.payload):legacy.payload;
+   }catch(e){console.warn("Legacy RunTrack cloud import skipped:",e.message)}
+  }
+  if(remote)await applySnapshot(remote);
+  await accountSave(true);
+  renderAccount();
+ }catch(e){
+  accountLoadedUserId="";
+  if(byId("accountHelp"))byId("accountHelp").textContent="Login ho gaya, lekin cloud data load nahi hua: "+e.message;
+  toast("Account sync setup issue: "+e.message);
+ }finally{accountBusy=false}
+}
+async function signInWithGoogle(){
+ if(!authClient){toast("Login library could not load. Refresh the page and try again.");return}
+ try{
+  const {error}=await authClient.auth.signInWithOAuth({provider:"google",options:{redirectTo:location.origin+location.pathname}});
+  if(error)throw error;
+ }catch(e){toast("Google sign-in failed: "+e.message)}
+}
+async function signOutGoogle(){
+ if(!authClient)return;
+ const {error}=await authClient.auth.signOut();
+ if(error){toast("Sign out failed: "+error.message);return}
+ accountUser=null;accountLoadedUserId="";renderAccount();toast("Signed out. Your cloud data remains saved.");
+}
+function initAccountAuth(){
+ renderAccount();
+ if(!authClient){if(byId("accountHelp"))byId("accountHelp").textContent="Login service could not load. Refresh this page and try again.";return}
+ authClient.auth.onAuthStateChange((event,session)=>{
+  if(session?.user){accountUser=session.user;renderAccount();setTimeout(()=>activateAccount(session.user),0)}
+  else if(event==="SIGNED_OUT"){accountUser=null;accountLoadedUserId="";renderAccount()}
+ });
+ authClient.auth.getSession().then(({data,error})=>{
+  if(error){console.warn("Could not read login session:",error.message);return}
+  if(data?.session?.user)activateAccount(data.session.user);
+ });
+}
+
 function makeSyncCode(){const bytes=new Uint8Array(32);crypto.getRandomValues(bytes);let raw="";bytes.forEach(b=>raw+=String.fromCharCode(b));return btoa(raw).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"")}
 function renderSync(){const input=byId("syncCodeInput");if(input&&syncCode)input.value=syncCode;if(syncCode){setSyncStatus("● SYNC CONNECTED","CONNECTED");setSyncHelp("This device is connected. Keep your sync code private; use it on another device to pair it.");}else{setSyncStatus("● LOCAL MODE","NOT CONNECTED");setSyncHelp("Not connected. Create a code on your first device, then use the same code on your other devices.");}}
 async function applySnapshot(remote){const merged=mergeSyncSnapshots(syncSnapshot(),remote||{});runs=merged.runs;settings=merged.settings;deletedRunIds=merged.deletedRunIds;localStorage.setItem(SETKEY,JSON.stringify(settings));localStorage.setItem("rt_settings_updated",String(merged.settingsUpdatedAt||Date.now()));persistLocal();if(byId("ageInput"))byId("ageInput").value=settings.age||26;if(byId("maxHrInput"))byId("maxHrInput").value=settings.maxHr||"";renderAll();return merged}
@@ -120,13 +208,13 @@ function exportData(){const blob=new Blob([JSON.stringify({version:2,exportedAt:
 function renderHealth(){const points=runs.reduce((s,r)=>s+(r.points?.length||0),0),gps=runs.filter(r=>r.track?.length),hr=runs.filter(r=>r.avgHr);byId("dataHealth").innerHTML='<div class="detailgrid"><div class="detailbox"><div class="metric-label">Activities</div><div class="metric">'+runs.length+'</div></div><div class="detailbox"><div class="metric-label">Trackpoints</div><div class="metric">'+points.toLocaleString()+'</div></div><div class="detailbox"><div class="metric-label">GPS tracks</div><div class="metric">'+gps.length+'</div></div></div><p class="sub" style="margin-top:12px">'+hr.length+' activities contain heart-rate data. Data is saved in this browser. If cloud sync is connected, a copy is also stored in your private cloud space.</p>'}
 function renderAll(){runs.sort((a,b)=>a.start-b.start);renderOverview();renderAnalytics();renderHistory();renderRecords();renderHealth()}
 function openPicker(){byId("fileInput").click()}
-byId("createSyncBtn").onclick=createSyncCode;byId("connectSyncBtn").onclick=connectSyncCode;byId("syncNowBtn").onclick=()=>syncNow(false);byId("copySyncBtn").onclick=copySyncCode;byId("disconnectSyncBtn").onclick=disconnectSync;byId("googleHealthConnectBtn").onclick=connectGoogleHealth;byId("googleHealthSyncBtn").onclick=syncGoogleHealth;byId("googleHealthDisconnectBtn").onclick=disconnectGoogleHealth;
+byId("googleSignInBtn").onclick=signInWithGoogle;byId("accountSignInBtn").onclick=signInWithGoogle;byId("signOutBtn").onclick=signOutGoogle;byId("accountSignOutBtn").onclick=signOutGoogle;byId("createSyncBtn").onclick=createSyncCode;byId("connectSyncBtn").onclick=connectSyncCode;byId("syncNowBtn").onclick=()=>syncNow(false);byId("copySyncBtn").onclick=copySyncCode;byId("disconnectSyncBtn").onclick=disconnectSync;byId("googleHealthConnectBtn").onclick=connectGoogleHealth;byId("googleHealthSyncBtn").onclick=syncGoogleHealth;byId("googleHealthDisconnectBtn").onclick=disconnectGoogleHealth;
 byId("topUpload").onclick=openPicker;byId("historyUpload").onclick=openPicker;byId("fileInput").onchange=e=>{importFiles(e.target.files);e.target.value=""};byId("exportBtn").onclick=exportData;byId("exportBtn2").onclick=exportData;byId("periodFilter").onchange=renderOverview;byId("historySearch").oninput=renderHistory;byId("sortHistory").onchange=renderHistory;byId("runA").onchange=renderCompare;byId("runB").onchange=renderCompare;byId("modalClose").onclick=()=>byId("runModal").classList.remove("open");byId("runModal").onclick=e=>{if(e.target===byId("runModal"))byId("runModal").classList.remove("open")};
 byId("saveSettings").onclick=()=>{const age=Number(byId("ageInput").value);if(!Number.isFinite(age)||age<13||age>100){toast("Enter a valid age between 13 and 100.");return}const mh=Number(byId("maxHrInput").value);if(byId("maxHrInput").value&&(mh<100||mh>230)){toast("Max HR must be between 100 and 230.");return}settings={age,maxHr:mh||null};localStorage.setItem(SETKEY,JSON.stringify(settings));localStorage.setItem("rt_settings_updated",String(Date.now()));persist();renderAnalytics();toast("Runner profile saved.")};byId("ageInput").value=settings.age;byId("maxHrInput").value=settings.maxHr||"";
 byId("clearBtn").onclick=()=>{if(confirm("Delete ALL RunTrack activities from this browser? Export a backup first if you need them.")){deletedRunIds=[...new Set([...deletedRunIds,...runs.map(r=>r.id).filter(Boolean)])];runs=[];persist();renderAll();toast("All activities cleared.")}};
 byId("backupInput").onchange=async e=>{try{const f=e.target.files[0];if(!f)return;const b=JSON.parse(await f.text());if(!Array.isArray(b.runs))throw Error("This is not a valid RunTrack backup.");const incoming=b.runs.filter(r=>r&&Number.isFinite(Number(r.distance))&&Number.isFinite(Number(r.duration))&&Number.isFinite(Number(r.start||Date.parse(r.date))));if(!confirm("Restore "+incoming.length+" activities? This replaces your current data."))return;runs=incoming.map(r=>({...r,start:Number(r.start||Date.parse(r.date)),points:Array.isArray(r.points)?r.points:[],splits:Array.isArray(r.splits)?r.splits:[]}));deletedRunIds=[];settings=Object.assign(settings,b.settings||{});localStorage.setItem(SETKEY,JSON.stringify(settings));localStorage.setItem("rt_settings_updated",String(Date.now()));byId("ageInput").value=settings.age;byId("maxHrInput").value=settings.maxHr||"";persist();renderAll();toast("Backup restored.")}catch(err){toast(err.message)}finally{e.target.value=""}};
 const drop=byId("dropzone");drop.onclick=openPicker;drop.ondragover=e=>{e.preventDefault();drop.classList.add("drag")};drop.ondragleave=()=>drop.classList.remove("drag");drop.ondrop=e=>{e.preventDefault();drop.classList.remove("drag");importFiles(e.dataTransfer.files)};
-byId("todayLabel").textContent=new Date().toLocaleDateString(undefined,{weekday:"long",day:"numeric",month:"long",year:"numeric"})+" · Your personal running intelligence.";renderAll();renderSync();handleGoogleHealthReturn();if(syncCode){setTimeout(()=>{syncNow(true);refreshGoogleHealthStatus()},900)};
+byId("todayLabel").textContent=new Date().toLocaleDateString(undefined,{weekday:"long",day:"numeric",month:"long",year:"numeric"})+" · Your personal running intelligence.";renderAll();renderSync();handleGoogleHealthReturn();initAccountAuth();if(syncCode){setTimeout(()=>{syncNow(true)},900)};
 
 
 </script></body></html>
