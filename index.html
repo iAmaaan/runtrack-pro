@@ -44,6 +44,7 @@ body.locked .app{visibility:hidden}
 <script>
 "use strict";
 const KEY="runtrack_pro_v1",SETKEY="rt_settings",byId=id=>document.getElementById(id);
+let cloudClient=null,cloudUser=null,cloudSyncBusy=false;
 let runs=loadRuns(),settings=loadSettings();
 function loadRuns(){try{const x=JSON.parse(localStorage.getItem(KEY)||"[]");return Array.isArray(x)?x:[]}catch(e){return []}}
 function loadSettings(){try{return Object.assign({age:26,maxHr:null},JSON.parse(localStorage.getItem(SETKEY)||"{}"))}catch(e){return {age:26,maxHr:null}}}
