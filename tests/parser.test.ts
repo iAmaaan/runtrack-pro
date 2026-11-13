@@ -29,8 +29,8 @@ describe("parseTcx", () => {
 
   it("detects long timestamp gaps and missing sensor/GPS fields", () => {
     const gapped = sampleTcx.replace("06:01:00+05:30", "06:01:10+05:30")
-      .replace(/<Position>.*?<\\/Position>/g, "")
-      .replace(/<HeartRateBpm>.*?<\\/HeartRateBpm>/g, "");
+      .replace(/<Position>.*?<\/Position>/g, "")
+      .replace(/<HeartRateBpm>.*?<\/HeartRateBpm>/g, "");
     const [workout] = parseTcx(gapped);
     expect(workout.dataQuality.timestampGapCount).toBeGreaterThan(0);
     expect(workout.dataQuality.missingGpsPercent).toBeGreaterThan(0);
