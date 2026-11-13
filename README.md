@@ -22,3 +22,22 @@ A personal running analytics web app. Import TCX workout files manually and view
 ## Privacy and access
 
 RunTrack Pro has no Google login, Google Health/Fitbit connection, or user authentication. Cloud access is intentionally open to visitors of the public website. The Supabase service-role key stays inside the server-side Edge Function and is never included in the website.
+
+## TypeScript analytics engine (Step 2)
+
+The new pure TypeScript engine is being added alongside the existing static app so the current website and its stored workouts remain intact.
+
+Requirements: Node.js 22 or newer.
+
+```bash
+npm install
+npm run typecheck
+npm test
+```
+
+- `src/engine/parser/tcxParser.ts`: namespace-aware local TCX parsing, offset-aware timestamps, multiple laps, missing fields and data-quality checks.
+- `src/engine/analytics/`: pure workout summary, split and heart-rate-zone calculations.
+- `src/engine/processing/`: Haversine distance and smoothing helpers.
+- `tests/`: small deterministic fixtures and Vitest unit tests.
+
+The parser keeps Lap summary distance and trackpoint distance separately. Cadence and power are not inferred when absent from the source file. The React interface and map are not wired to this engine yet; that is a later implementation step.
