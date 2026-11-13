@@ -17,7 +17,7 @@ export function calculateWorkoutSummary(
     const previous = points[i];
     const dt = Math.max(0, (p.timeMs - previous.timeMs) / 1000);
     return { dt, speed: p.speedMps };
-  }).filter(x => x.dt > 0 && x.dt <= 10);
+  }).filter(x => x.dt > 0 && x.dt <= 1.5);
   const movingSeconds = movingIntervals.filter(x => (x.speed ?? 0) >= threshold).reduce((s, x) => s + x.dt, 0);
   const countedSeconds = movingIntervals.reduce((s, x) => s + x.dt, 0);
   const stoppedSeconds = Math.max(0, Math.min(elapsedSeconds, countedSeconds) - movingSeconds);
