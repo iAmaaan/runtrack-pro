@@ -50,6 +50,80 @@ body[data-theme="sport"] .tablebtn{background:#1b3b50;color:var(--text);border-c
 body[data-theme="sport"] .modalbox{background:#102638;border-color:#23445a}
 body[data-theme="sport"] .chart .gridline{stroke:#23445a}
 @media(max-width:700px){.theme-select{min-width:92px;padding:8px;font-size:10px}.topright{gap:6px}}
+
+/* Mobile-first responsive polish */
+html{ -webkit-text-size-adjust:100%; }
+body{ min-width:320px; overflow-x:hidden; }
+img,svg,canvas{max-width:100%}
+button,select,input{touch-action:manipulation}
+@media(max-width:700px){
+  .app{padding:12px 12px calc(94px + env(safe-area-inset-bottom));width:100%;overflow-x:clip}
+  .top{gap:10px;align-items:center;margin-bottom:18px}
+  .brand{gap:8px;letter-spacing:.08em;font-size:12px;min-width:0}
+  .logo{width:34px;height:34px;flex:0 0 34px}
+  .topright{gap:6px;min-width:0}
+  .theme-select{min-width:0;width:94px;max-width:94px}
+  .topright .btn{padding:9px 10px;font-size:11px;white-space:nowrap}
+  .layout{display:block}
+  .side{position:fixed;z-index:30;left:0;right:0;bottom:0;padding:0;background:rgba(10,15,23,.96);border:0;border-top:1px solid var(--line);backdrop-filter:blur(18px);padding-bottom:env(safe-area-inset-bottom)}
+  body[data-theme="light"] .side{background:rgba(255,255,255,.96)}
+  .nav{position:static;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:2px;padding:6px 5px 5px;overflow:visible}
+  .nav button{min-width:0;min-height:54px;padding:7px 1px 5px;border-radius:10px;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font-size:0;line-height:1}
+  .nav button:before,.nav button.active:before{display:none}
+  .nav button:after{content:attr(data-page);font:700 9px Manrope,system-ui,sans-serif;color:inherit;text-transform:capitalize;letter-spacing:-.02em}
+  .nav button.active{color:var(--lime)}
+  .nav button.active:after{color:var(--lime)}
+  .navfoot{display:none}
+  .main{width:100%;min-width:0}
+  .hero{gap:13px;margin-bottom:16px}
+  .hero h1{font-size:clamp(25px,7vw,34px);line-height:1.08}
+  .hero-actions{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;width:100%}
+  .hero-actions .select{min-width:0;width:100%}
+  .hero-actions .btn{white-space:nowrap}
+  .grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+  .card{padding:13px;border-radius:15px;min-width:0}
+  .metric-label{font-size:9px;letter-spacing:.08em}
+  .metric{font-size:clamp(21px,6vw,28px);white-space:normal;overflow-wrap:anywhere}
+  .metric-foot{font-size:10px;line-height:1.4}
+  .twocol,.threecol{grid-template-columns:minmax(0,1fr);gap:10px;margin-top:10px}
+  .cardhead{align-items:flex-start;flex-wrap:wrap;margin-bottom:11px}
+  .cardhead h3{font-size:13px}
+  .cardhead span{font-size:8px}
+  .chart{height:185px;max-width:100%}
+  .detailgrid{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+  .detailbox{padding:9px 7px;min-width:0}
+  .detailbox .metric{font-size:clamp(16px,4.5vw,21px)}
+  .splitgrid{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+  .split{padding:10px;min-width:0}
+  .split b{font-size:15px}
+  .filters,.compare-controls{display:grid;grid-template-columns:minmax(0,1fr);width:100%;gap:8px}
+  .filters .input,.filters .select,.compare-controls select{width:100%;min-width:0}
+  .tablewrap{max-width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}
+  table{min-width:680px}
+  .drop{padding:19px 12px}
+  .modal{padding:10px;align-items:flex-end}
+  .modalbox{width:100%;max-height:92dvh;padding:15px;border-radius:18px 18px 12px 12px}
+  .modalhead{position:sticky;top:-15px;background:inherit;padding:4px 0 10px;z-index:2}
+  .toast{left:12px;right:12px;bottom:calc(72px + env(safe-area-inset-bottom));text-align:center}
+  .footer{padding-bottom:4px}
+}
+@media(max-width:390px){
+  .app{padding-left:10px;padding-right:10px}
+  .brand{font-size:11px}
+  .topright .btn{font-size:10px;padding:8px}
+  .theme-select{width:82px;max-width:82px;font-size:9px}
+  .nav{padding-left:3px;padding-right:3px}
+  .nav button:after{font-size:8px}
+  .detailgrid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .hero h1{font-size:26px}
+}
+@media(min-width:701px) and (max-width:1050px){
+  .app{padding:20px}
+  .grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .layout{grid-template-columns:155px minmax(0,1fr);gap:15px}
+}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
+
 </style></head>
 <body>
 <div class="app">
