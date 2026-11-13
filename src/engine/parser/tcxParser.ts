@@ -103,18 +103,18 @@ function normalizeDistance(raw: RawPoint[]): TrackPoint[] {
 
 function buildQuality(points: TrackPoint[], laps: LapSummary[], trackDistanceM: number): DataQualityReport {
   const issues: DataQualityIssue[] = [];
-  let gaps = 0, stops = 0, drift = 0;
+  let gaps = 0, stops = 0, drift = 0, inStop = false;
   for (let i = 1; i < points.length; i++) {
     const a = points[i - 1], b = points[i];
     const dt = (b.timeMs - a.timeMs) / 1000;
     if (dt > 1.5) gaps++;
-    if (dt <= 0) continue;
+    if (dt <= 0) { inStop = false; continue; }
     const counterDelta = a.distanceM !== null && b.distanceM !== null ? b.distanceM - a.distanceM : null;
     const gpsDelta = isValidCoordinate(a.latitude, a.longitude) && isValidCoordinate(b.latitude, b.longitude)
       ? haversineMeters(a.latitude!, a.longitude!, b.latitude!, b.longitude!) : null;
     if (counterDelta !== null && counterDelta <= 0 && gpsDelta !== null && gpsDelta > 3) drift++;
     const observedDistance = counterDelta !== null && counterDelta > 0 ? counterDelta : (gpsDelta ?? 0);
-    if (observedDistance / dt < 0.5 && dt <= 10) stops++;
+    const lowSpeed = observedDistance / dt < 0.5 && dt <= 10;\n    if (lowSpeed && !inStop) stops++;\n    inStop = lowSpeed;
   }
   const lapDistance = laps.every(l => l.distanceMeters !== null)
     ? laps.reduce((sum, lap) => sum + (lap.distanceMeters ?? 0), 0) : null;
