@@ -115,7 +115,8 @@ function buildQuality(points: TrackPoint[], laps: LapSummary[], trackDistanceM: 
     if (counterDelta !== null && counterDelta <= 0 && gpsDelta !== null && gpsDelta > 3) drift++;
     const observedDistance = counterDelta !== null && counterDelta > 0 ? counterDelta : (gpsDelta ?? 0);
     const lowSpeed = observedDistance / dt < 0.5 && dt <= 10;
-    if (lowSpeed && !inStop) stops++;\n    inStop = lowSpeed;
+    if (lowSpeed && !inStop) stops++;
+    inStop = lowSpeed;
   }
   const lapDistance = laps.every(l => l.distanceMeters !== null)
     ? laps.reduce((sum, lap) => sum + (lap.distanceMeters ?? 0), 0) : null;
