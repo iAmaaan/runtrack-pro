@@ -1,25 +1,24 @@
 # RunTrack Pro
 
-A personal running analytics web app. Upload your TCX workout files manually to view running history, pace, distance, heart rate, splits and performance trends.
+A personal running analytics web app. Import TCX workout files manually and view running history, pace, distance, heart rate, splits and performance trends.
 
-## Deploy free with GitHub Pages
+## Deploy with GitHub Pages
 
 1. Open **Settings → Pages** in this repository.
 2. Under **Build and deployment → Source**, select **GitHub Actions**.
 3. The workflow deploys the site whenever you push to `main`.
 4. Site: https://iAmaaan.github.io/runtrack-pro/
 
-## Manual TCX import and local data
+## Manual TCX import + shared cloud
 
+- Open RunTrack Pro. No login, account, password, OTP or sync code is needed.
 - Choose **Import activity** and select one or more `.tcx` files.
-- TCX files are parsed in your browser; they are not uploaded to a server.
-- Activities and profile settings are stored in that browser's local storage.
-- To use another phone or computer, open the same public website and import your TCX files there too.
-- Use **Backup** to download a JSON copy of your RunTrack data. Use **Restore backup** to load it in another browser.
-- Clearing browser site data or changing browser profiles can remove locally stored activities. Keep regular backups.
+- TCX files are parsed in your browser. The resulting activity data is automatically saved to the shared Supabase cloud database.
+- Open the same website on another phone or computer to see the same running history.
+- A local browser copy is also kept as a cache. Use **Backup** to download a JSON backup and **Restore backup** to restore it.
+- The app uses one shared dataset. Anyone who can access the public website can read and change the shared activities. Do not use this setup for sensitive information.
+- Keep periodic JSON backups. An internet connection is required to load or save the shared cloud copy.
 
-The repository and published website are public. Do not commit TCX activity files, backups, or private information.
+## Privacy and access
 
-## Privacy
-
-RunTrack Pro currently has no Google login, Google Health/Fitbit connection, or cloud sync. Your uploaded TCX data stays in the browser where you imported it.
+RunTrack Pro has no Google login, Google Health/Fitbit connection, or user authentication. Cloud access is intentionally open to visitors of the public website. The Supabase service-role key stays inside the server-side Edge Function and is never included in the website.
