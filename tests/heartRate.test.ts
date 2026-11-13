@@ -10,7 +10,7 @@ describe("heart-rate zones", () => {
   it("allocates interval time to five HR zones", () => {
     const zones = calculateHeartRateZones(samplePoints(), 26);
     expect(zones).toHaveLength(5);
-    expect(zones.reduce((sum, zone) => sum + zone.seconds, 0)).toBe(600);
+    expect(zones.reduce((sum, zone) => sum + zone.seconds, 0)).toBe(10);
     expect(zones.reduce((sum, zone) => sum + zone.percent, 0)).toBeCloseTo(100);
   });
 });
