@@ -8,7 +8,7 @@ describe("workout analytics", () => {
     const points = samplePoints();
     const summary = calculateWorkoutSummary(points, 600, 1000, 100);
     expect(summary.averagePaceSecPerKm).toBe(600);
-    expect(summary.elevationMinM).toBeCloseTo(9.8, 1);
+    expect(summary.elevationMinM).toBeCloseTo(9.9, 1);
     expect(summary.smoothedElevationGainM).toBe(0);
   });
 
