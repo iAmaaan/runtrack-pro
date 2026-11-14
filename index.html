@@ -300,6 +300,8 @@ body[data-theme] .tablebtn{background:#edf3ff!important;color:#286bd8!important}
 @media(max-width:700px){.chart{height:225px}.chart-shell{padding-top:4px}}
 
 
+/* Prevent fixed-length SVG dash animation from hiding the tail of long charts */
+.chart .chart-line{animation:none!important;stroke-dasharray:none!important;stroke-dashoffset:0!important;}
 /* Chart readability polish */
 .chart-point-last{fill:#3478f6!important;stroke:#fff!important;stroke-width:2.5!important;filter:drop-shadow(0 1px 4px rgba(52,120,246,.42))}
 .chart-shell{padding:12px 4px 2px}
