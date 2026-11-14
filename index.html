@@ -283,6 +283,19 @@ body[data-theme] .tablebtn{background:#edf3ff!important;color:#286bd8!important}
 }
 
 
+/* Fluid wave-chart visual treatment */
+.trend-card{background:radial-gradient(ellipse at 50% -10%,#eaf2ff 0%,#fff 62%)!important;border:1px solid #dce8f8!important;box-shadow:0 22px 58px rgba(31,73,132,.10)!important}
+.trend-svg{height:410px!important}
+.trend-grid{stroke:#e9eff8!important;stroke-dasharray:2 9!important;stroke-width:1!important}
+.trend-area{pointer-events:none;opacity:.95;transition:opacity .25s ease}
+.trend-line{stroke-width:4.8;stroke-linecap:round;stroke-linejoin:round;pointer-events:none;filter:drop-shadow(0 5px 8px color-mix(in srgb,var(--trend-color) 24%,transparent));transition:stroke-width .2s ease}
+.trend-shell:hover .trend-line{stroke-width:5.2}
+.trend-hit{pointer-events:none;cursor:crosshair}
+.trend-crosshair{stroke:#7286a3!important;stroke-width:1.25!important;stroke-dasharray:3 7!important;opacity:0}
+.trend-crossdot{fill:#fff!important;stroke:#3478f6!important;stroke-width:3!important;opacity:0;filter:drop-shadow(0 2px 5px rgba(52,120,246,.35))}
+.trend-shell .chart-tooltip{max-width:360px!important;white-space:normal!important;line-height:1.55!important;background:rgba(19,31,50,.96)!important;border:1px solid rgba(255,255,255,.12)!important;border-radius:15px!important;padding:12px 15px!important;box-shadow:0 16px 38px rgba(13,28,51,.24)!important}
+.trend-foot{padding-top:6px}
+@media(max-width:700px){.trend-svg{height:320px!important}.trend-line{stroke-width:4.2}}
 /* Premium interactive multi-metric dashboard chart */
 .trend-card{padding:27px 30px 20px;background:radial-gradient(ellipse at 50% 0%,#edf4ff 0%,#fff 58%)!important;border:1px solid #dfe9f7!important;box-shadow:0 16px 42px rgba(35,75,130,.08)!important}
 .trend-head{align-items:center!important;margin-bottom:8px!important}
@@ -447,24 +460,31 @@ function chart(data,opt={}){if(!data||data.length<1)return '<div class="empty">U
 function multiTrendChart(days,series){
  const active=series.filter(z=>z.values.some(v=>Number.isFinite(v)));
  if(!active.length)return '<div class="empty">Select at least one metric to display.</div>';
- const W=1000,H=390,L=54,R=24,T=28,B=48,n=days.length||1,x=i=>L+(W-L-R)*(n===1?.5:i/(n-1)),y=v=>T+(H-T-B)*(1-v/100),uid='trend'+Math.random().toString(36).slice(2,8);
- let out='<div class="chart-shell trend-shell"><svg class="chart trend-svg" viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="none" role="img" aria-label="Interactive running metrics trend chart"><defs>';
- active.forEach((z,i)=>{out+='<linearGradient id="'+uid+i+'" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="'+z.color+'" stop-opacity=".72"/><stop offset="50%" stop-color="'+z.color+'"/><stop offset="100%" stop-color="'+z.color+'" stop-opacity=".82"/></linearGradient>'});
- out+='</defs>';
+ const W=1000,H=410,L=52,R=24,T=30,B=48,n=days.length||1,base=H-B,x=i=>L+(W-L-R)*(n===1?.5:i/(n-1)),y=v=>T+(H-T-B)*(1-v/100),uid='wave'+Math.random().toString(36).slice(2,8);
+ let out='<div class="chart-shell trend-shell"><svg class="chart trend-svg" viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="none" role="img" aria-label="Interactive running metrics wave chart"><defs>';
+ active.forEach((z,i)=>{out+='<linearGradient id="'+uid+i+'" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="'+z.color+'" stop-opacity=".28"/><stop offset="75%" stop-color="'+z.color+'" stop-opacity=".055"/><stop offset="100%" stop-color="'+z.color+'" stop-opacity="0"/></linearGradient>'});
+ out+='<filter id="'+uid+'glow" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="5" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>';
  for(let k=0;k<4;k++){const yy=T+(H-T-B)*k/3;out+='<path class="gridline trend-grid" d="M'+L+' '+yy+'H'+(W-R)+'"/>'}
+ const hoverRows=days.map((d,i)=>({i,x:x(i),y:base,parts:[]}));
  active.forEach((z,si)=>{
   const vals=z.values.filter(Number.isFinite);if(!vals.length)return;
   const lo=Math.min(...vals),hi=Math.max(...vals),span=hi-lo||1;
   const pts=z.values.map((v,i)=>Number.isFinite(v)?[x(i),y(hi===lo?50:10+((v-lo)/span)*80),v,i]:null);
   const valid=pts.filter(Boolean);if(!valid.length)return;
   let path='M'+valid[0][0].toFixed(1)+','+valid[0][1].toFixed(1);
-  for(let i=0;i<valid.length-1;i++){const a=valid[Math.max(0,i-1)],b=valid[i],c=valid[i+1],d=valid[Math.min(valid.length-1,i+2)],dx=c[0]-b[0];const c1x=b[0]+dx/3,c1y=Math.max(Math.min(b[1],c[1]),Math.min(Math.max(b[1],c[1]),b[1]+(c[1]-a[1])/6)),c2x=c[0]-dx/3,c2y=Math.max(Math.min(b[1],c[1]),Math.min(Math.max(b[1],c[1]),c[1]-(d[1]-b[1])/6));path+=' C'+c1x.toFixed(1)+','+c1y.toFixed(1)+' '+c2x.toFixed(1)+','+c2y.toFixed(1)+' '+c[0].toFixed(1)+','+c[1].toFixed(1)}
-  out+='<path class="trend-line" d="'+path+'" fill="none" stroke="url(#'+uid+si+')" style="--trend-color:'+z.color+'"/>';
-  valid.forEach((p)=>{const actual=z.format(p[2]),tip=days[p[3]].label+' · '+z.name+': '+actual;out+='<circle class="chart-hit trend-hit" tabindex="0" role="button" aria-label="'+esc(tip)+'" data-tip="'+esc(tip)+'" cx="'+p[0]+'" cy="'+p[1]+'" r="15"/><circle class="trend-point" cx="'+p[0]+'" cy="'+p[1]+'" r="4" fill="'+z.color+'"/>'});
+  for(let i=0;i<valid.length-1;i++){
+   const p0=valid[Math.max(0,i-1)],p1=valid[i],p2=valid[i+1],p3=valid[Math.min(valid.length-1,i+2)],dx=p2[0]-p1[0];
+   const c1y=p1[1]+(p2[1]-p0[1])/6,c2y=p2[1]-(p3[1]-p1[1])/6;
+   path+=' C'+(p1[0]+dx/3).toFixed(1)+','+c1y.toFixed(1)+' '+(p2[0]-dx/3).toFixed(1)+','+c2y.toFixed(1)+' '+p2[0].toFixed(1)+','+p2[1].toFixed(1);
+  }
+  const area=path+' L'+valid[valid.length-1][0].toFixed(1)+','+base+' L'+valid[0][0].toFixed(1)+','+base+' Z';
+  out+='<path class="trend-area" d="'+area+'" fill="url(#'+uid+si+')"/><path class="trend-line" d="'+path+'" fill="none" stroke="'+z.color+'" style="--trend-color:'+z.color+'" filter="url(#'+uid+'glow)"/>';
+  valid.forEach(p=>{hoverRows[p[3]].parts.push(z.name+': '+z.format(p[2]));hoverRows[p[3]].y=Math.min(hoverRows[p[3]].y,p[1])});
  });
+ hoverRows.forEach(row=>{if(!row.parts.length)return;const tip=days[row.i].label+'  •  '+row.parts.join('   |   ');out+='<circle class="chart-hit trend-hit" tabindex="0" role="button" aria-label="'+esc(tip)+'" data-tip="'+esc(tip)+'" cx="'+row.x+'" cy="'+row.y+'" r="18"/>'});
  const count=n<=7?n:n<=15?5:7,idx=Array.from({length:count},(_,i)=>Math.round(i*(n-1)/Math.max(1,count-1)));
  [...new Set(idx)].forEach(i=>{out+='<text class="chart-xlabel" x="'+x(i)+'" y="'+(H-13)+'" text-anchor="middle">'+esc(days[i].label)+'</text>'});
- out+='<line class="chart-crosshair-line trend-crosshair" x1="'+L+'" y1="'+T+'" x2="'+L+'" y2="'+(H-B)+'"/><circle class="chart-crosshair-dot trend-crossdot" cx="'+L+'" cy="'+(H-B)/2+'" r="6"/><rect class="chart-hover-area" x="'+L+'" y="'+T+'" width="'+(W-L-R)+'" height="'+(H-T-B)+'"/>';
+ out+='<line class="chart-crosshair-line trend-crosshair" x1="'+L+'" y1="'+T+'" x2="'+L+'" y2="'+base+'"/><circle class="chart-crosshair-dot trend-crossdot" cx="'+L+'" cy="'+(H/2)+'" r="6"/><rect class="chart-hover-area" x="'+L+'" y="'+T+'" width="'+(W-L-R)+'" height="'+(H-T-B)+'"/>';
  out+='</svg><div class="chart-tooltip" aria-live="polite"></div></div>';return out;
 }
 function selectedRuns(){const d=Number(byId("periodFilter")?.value||0);return d?runs.filter(r=>Date.now()-(r.start||Date.parse(r.date))<=d*864e5):runs}
