@@ -450,7 +450,7 @@ function parseTCX(xml,name){
  let trackpointDistance=0,trackpointValid=laps.length>0;
  for(const lap of laps){
   const values=lap.points.map(p=>p.dist).filter(v=>Number.isFinite(v)&&v>=0);
-  if(values.length<2||values[values.length-1]<values[0]){trackpointValid=false;continue}
+  if(values.length<2||values[values.length-1]<=values[0]||!values.every((v,i)=>i===0||v>=values[i-1])){trackpointValid=false;continue}
   const delta=values[values.length-1]-values[0];if(!(delta>0)){trackpointValid=false;continue}trackpointDistance+=delta;
  }
  if(!trackpointValid||!(trackpointDistance>10))trackpointDistance=null;
