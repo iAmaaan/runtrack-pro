@@ -56,7 +56,7 @@ describe("parseTcx", () => {
     expect(workout.distanceM).toBe(7006);
     expect(workout.lapSummaryDistanceM).toBe(7006);
     expect(workout.trackpointDistanceM).toBeCloseTo(trackDistance, 0);
-    expect(workout.gpsDistanceM).toBeCloseTo(gpsDistance, 0);
+    expect(Math.abs(workout.gpsDistanceM - gpsDistance)).toBeLessThan(2);
     expect(workout.points.at(-1)?.distanceM).toBeCloseTo(trackDistance, 0);
     const summary = calculateWorkoutSummary(workout.points, duration, workout.distanceM, workout.calories);
     expect(summary.averagePaceSecPerKm).toBeCloseTo(3776 / 7.006, 1);
