@@ -177,7 +177,8 @@ export function parseTcx(xmlText: string, sourceFileName = "activity.tcx"): Work
       const lapPoints = points.filter(p => p.lapIndex === lap.index);
       const values = lapPoints.map(p => rawDistanceByTime.get(p.timeMs))
         .filter((v): v is number => v !== null && v !== undefined && Number.isFinite(v) && v >= 0);
-      return values.length >= 2 && values[values.length - 1] >= values[0]
+      const monotonic = values.every((value, i) => i === 0 || value >= values[i - 1]);
+      return values.length >= 2 && monotonic && values[values.length - 1] > values[0]
         ? values[values.length - 1] - values[0] : null;
     });
     const trackpointValid = lapTrackDistances.length > 0 && lapTrackDistances.every(v => v !== null && v > 0);
