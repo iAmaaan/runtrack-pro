@@ -182,7 +182,7 @@ export function parseTcx(xmlText: string, sourceFileName = "activity.tcx"): Work
     });
     const trackpointValid = lapTrackDistances.length > 0 && lapTrackDistances.every(v => v !== null && v > 0);
     const trackDistanceValid = trackpointValid;
-    const trackDistance = trackpointValid ? lapTrackDistances.reduce((sum, v) => sum + (v ?? 0), 0) : 0;
+    const trackDistance: number = trackpointValid ? lapTrackDistances.reduce<number>((sum, v) => sum + (v ?? 0), 0) : 0;
     let gpsDistance = 0;
     for (let i = 1; i < points.length; i++) {
       const a = points[i - 1], b = points[i];
@@ -190,7 +190,7 @@ export function parseTcx(xmlText: string, sourceFileName = "activity.tcx"): Work
       const delta = haversineMeters(a.latitude!, a.longitude!, b.latitude!, b.longitude!);
       if (delta > 0 && delta < 100) gpsDistance += delta;
     }
-    const officialDistance = summaryDistance ?? (trackDistance > 10 ? trackDistance : gpsDistance);
+    const officialDistance: number = summaryDistance ?? (trackDistance > 10 ? trackDistance : gpsDistance);
     if (!(officialDistance > 10)) throw new Error("No reliable distance data found in this file.");
     const timerSeconds = laps.every(l => l.totalTimeSeconds !== null && Number.isFinite(l.totalTimeSeconds) && l.totalTimeSeconds > 0)
       ? laps.reduce((sum, l) => sum + (l.totalTimeSeconds ?? 0), 0) : (end - start) / 1000;
