@@ -78,24 +78,20 @@ function readLaps(activity: Element): { laps: LapSummary[]; rawPoints: RawPoint[
 
 function normalizeDistance(raw: RawPoint[]): TrackPoint[] {
   const points: TrackPoint[] = [];
-  let lapOffset = 0;
-  let previousLap = -1;
-  let previousRaw: number | null = null;
-  let previousNormalized = 0;
+  const lapOffsets = new Map<number, number>();
+  const lapStarts = new Map<number, number | null>();
+  const lapEnds = new Map<number, number>();
   for (const point of raw) {
-    if (point.lapIndex !== previousLap) {
-      if (previousLap !== -1) lapOffset = previousNormalized;
-      previousLap = point.lapIndex;
-      previousRaw = point.distanceM;
+    if (!lapStarts.has(point.lapIndex)) {
+      const previousEnd = point.lapIndex > 0 ? (lapEnds.get(point.lapIndex - 1) ?? 0) : 0;
+      lapOffsets.set(point.lapIndex, previousEnd);
+      lapStarts.set(point.lapIndex, point.distanceM);
     }
-    let distanceM: number | null = point.distanceM;
-    if (distanceM !== null && previousRaw !== null) {
-      distanceM = lapOffset + Math.max(0, distanceM - previousRaw);
-      previousNormalized = Math.max(previousNormalized, distanceM);
-    } else if (distanceM !== null) {
-      distanceM = lapOffset + distanceM;
-      previousNormalized = Math.max(previousNormalized, distanceM);
-    }
+    const first = lapStarts.get(point.lapIndex) ?? null;
+    const offset = lapOffsets.get(point.lapIndex) ?? 0;
+    const distanceM = point.distanceM !== null && first !== null && point.distanceM >= first
+      ? offset + point.distanceM - first : null;
+    if (distanceM !== null) lapEnds.set(point.lapIndex, Math.max(lapEnds.get(point.lapIndex) ?? offset, distanceM));
     points.push({ ...point, distanceM, speedMps: null });
   }
   return points;
@@ -171,10 +167,30 @@ export function parseTcx(xmlText: string, sourceFileName = "activity.tcx"): Work
       b.speedMps = delta / dt;
     }
     const start = points[0].timeMs, end = points[points.length - 1].timeMs;
-    const trackDistance = points.reduce((max, p) => Math.max(max, p.distanceM ?? 0), 0);
-    const summaryDistance = laps.every(l => l.distanceMeters !== null)
+    const lapSummaryValid = laps.length > 0 && laps.every(l =>
+      l.distanceMeters !== null && Number.isFinite(l.distanceMeters) && l.distanceMeters > 0
+    );
+    const summaryDistance = lapSummaryValid
       ? laps.reduce((sum, l) => sum + (l.distanceMeters ?? 0), 0) : null;
-    const timerSeconds = laps.every(l => l.totalTimeSeconds !== null)
+    const lapTrackDistances = laps.map(lap => {
+      const lapPoints = points.filter(p => p.lapIndex === lap.index);
+      const values = lapPoints.map(p => rawPoints.find(r => r.timeMs === p.timeMs)?.distanceM)
+        .filter((v): v is number => v !== null && v !== undefined && Number.isFinite(v) && v >= 0);
+      return values.length >= 2 && values[values.length - 1] >= values[0]
+        ? values[values.length - 1] - values[0] : null;
+    });
+    const trackpointValid = lapTrackDistances.length > 0 && lapTrackDistances.every(v => v !== null && v > 0);
+    const trackDistanceValid = trackpointValid;\n    const trackDistance = trackpointValid ? lapTrackDistances.reduce((sum, v) => sum + (v ?? 0), 0) : 0;
+    let gpsDistance = 0;
+    for (let i = 1; i < points.length; i++) {
+      const a = points[i - 1], b = points[i];
+      if (!isValidCoordinate(a.latitude, a.longitude) || !isValidCoordinate(b.latitude, b.longitude)) continue;
+      const delta = haversineMeters(a.latitude!, a.longitude!, b.latitude!, b.longitude!);
+      if (delta > 0 && delta < 100) gpsDistance += delta;
+    }
+    const officialDistance = summaryDistance ?? (trackDistance > 10 ? trackDistance : gpsDistance);
+    if (!(officialDistance > 10)) throw new Error("No reliable distance data found in this file.");
+    const timerSeconds = laps.every(l => l.totalTimeSeconds !== null && Number.isFinite(l.totalTimeSeconds) && l.totalTimeSeconds > 0)
       ? laps.reduce((sum, l) => sum + (l.totalTimeSeconds ?? 0), 0) : (end - start) / 1000;
     const calories = laps.some(l => l.calories !== null)
       ? laps.reduce((sum, l) => sum + (l.calories ?? 0), 0) : null;
@@ -183,7 +199,7 @@ export function parseTcx(xmlText: string, sourceFileName = "activity.tcx"): Work
       id: makeId(), name: sourceFileName.replace(/\.tcx$/i, "") + (activities.length > 1 ? ` #${activityIndex + 1}` : ""),
       sport: activity.getAttribute("Sport") || "Unknown",
       startedAtMs: start, endedAtMs: end, elapsedSeconds: (end - start) / 1000,
-      timerSeconds, lapSummaryDistanceM: summaryDistance, trackpointDistanceM: trackDistance,
+      timerSeconds, distanceM: officialDistance, gpsDistanceM: gpsDistance, lapSummaryDistanceM: summaryDistance, trackpointDistanceM: trackDistanceValid ? trackDistance : 0,
       calories, laps, points, dataQuality, sourceFileName, parserVersion: 1
     });
   });
