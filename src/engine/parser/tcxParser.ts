@@ -114,7 +114,7 @@ function buildQuality(points: TrackPoint[], laps: LapSummary[], trackDistanceM: 
     if (lowSpeed && !inStop) stops++;
     inStop = lowSpeed;
   }
-  const lapDistance = laps.every(l => l.distanceMeters !== null)
+  const lapDistance = laps.length > 0 && laps.every(l => l.distanceMeters !== null && Number.isFinite(l.distanceMeters) && l.distanceMeters > 0)
     ? laps.reduce((sum, lap) => sum + (lap.distanceMeters ?? 0), 0) : null;
   const mismatch = lapDistance !== null && lapDistance > 0
     ? Math.abs(trackDistanceM - lapDistance) / lapDistance * 100 : null;
@@ -172,9 +172,10 @@ export function parseTcx(xmlText: string, sourceFileName = "activity.tcx"): Work
     );
     const summaryDistance = lapSummaryValid
       ? laps.reduce((sum, l) => sum + (l.distanceMeters ?? 0), 0) : null;
+    const rawDistanceByTime = new Map(rawPoints.map(p => [p.timeMs, p.distanceM]));
     const lapTrackDistances = laps.map(lap => {
       const lapPoints = points.filter(p => p.lapIndex === lap.index);
-      const values = lapPoints.map(p => rawPoints.find(r => r.timeMs === p.timeMs)?.distanceM)
+      const values = lapPoints.map(p => rawDistanceByTime.get(p.timeMs))
         .filter((v): v is number => v !== null && v !== undefined && Number.isFinite(v) && v >= 0);
       return values.length >= 2 && values[values.length - 1] >= values[0]
         ? values[values.length - 1] - values[0] : null;
