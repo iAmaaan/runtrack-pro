@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { parseTcx } from "../src/engine/parser/tcxParser";
 import { sampleTcx } from "./sampleWorkout";
+import { calculateWorkoutSummary } from "../src/engine/analytics/summary";
 
 describe("parseTcx", () => {
   it("parses namespaced TCX and preserves timezone offsets", () => {
@@ -41,4 +42,34 @@ describe("parseTcx", () => {
     expect(() => parseTcx("<broken")).toThrow(/invalid XML/i);
     expect(() => parseTcx("<TrainingCenterDatabase xmlns=\"http://www.garmin.com/xmlschemas/TrainingCenterDatabase/v2\"><Activities/></TrainingCenterDatabase>")).toThrow(/No Activity/i);
   });
+  it("uses valid lap summary as official distance without stretching trackpoint or GPS distance", () => {
+    const count = 111, duration = 3776, trackDistance = 5498, gpsDistance = 5503;
+    const points = Array.from({ length: count }, (_, i) => {
+      const fraction = i / (count - 1);
+      const time = new Date(Date.parse("2026-01-01T06:00:00+05:30") + duration * 1000 * fraction).toISOString().replace("Z", "+00:00");
+      const lat = 19 + 0.0495 * fraction;
+      const dist = trackDistance * fraction;
+      return `<Trackpoint><Time>${time}</Time><Position><LatitudeDegrees>${lat}</LatitudeDegrees><LongitudeDegrees>72</LongitudeDegrees></Position><AltitudeMeters>10</AltitudeMeters><DistanceMeters>${dist}</DistanceMeters><HeartRateBpm><Value>140</Value></HeartRateBpm></Trackpoint>`;
+    }).join("");
+    const tcx = `<?xml version="1.0"?><TrainingCenterDatabase xmlns="http://www.garmin.com/xmlschemas/TrainingCenterDatabase/v2"><Activities><Activity Sport="Running"><Id>2026-01-01T06:00:00+05:30</Id><Lap StartTime="2026-01-01T06:00:00+05:30"><TotalTimeSeconds>${duration}</TotalTimeSeconds><DistanceMeters>7006</DistanceMeters><Calories>300</Calories><Track>${points}</Track></Lap></Activity></Activities></TrainingCenterDatabase>`;
+    const [workout] = parseTcx(tcx, "16-11.tcx");
+    expect(workout.distanceM).toBe(7006);
+    expect(workout.lapSummaryDistanceM).toBe(7006);
+    expect(workout.trackpointDistanceM).toBeCloseTo(trackDistance, 0);
+    expect(workout.gpsDistanceM).toBeCloseTo(gpsDistance, 0);
+    expect(workout.points.at(-1)?.distanceM).toBeCloseTo(trackDistance, 0);
+    const summary = calculateWorkoutSummary(workout.points, duration, workout.distanceM, workout.calories);
+    expect(summary.averagePaceSecPerKm).toBeCloseTo(3776 / 7.006, 1);
+    expect(summary.averagePaceSecPerKm).toBeGreaterThan(538);
+    expect(summary.averagePaceSecPerKm).toBeLessThan(540);
+  });
+
+  it("falls back to matching trackpoint distance when lap summary is missing or invalid", () => {
+    const missing = sampleTcx.replace("<DistanceMeters>200</DistanceMeters><Calories>", "<DistanceMeters>0</DistanceMeters><Calories>");
+    const [workout] = parseTcx(missing);
+    expect(workout.lapSummaryDistanceM).toBeNull();
+    expect(workout.distanceM).toBe(200);
+    expect(workout.trackpointDistanceM).toBe(200);
+  });
+
 });
