@@ -421,26 +421,56 @@ function haversine(a,b,c,d){const R=6371000,rad=x=>x*Math.PI/180,dl=rad(c-a),dn=
 function parseTCX(xml,name){
  const doc=new DOMParser().parseFromString(xml,"application/xml");if(doc.querySelector("parsererror"))throw Error("Invalid XML / TCX file.");
  const activities=[...doc.getElementsByTagNameNS("*","Activity")];if(!activities.length)throw Error("No activity found.");
- let calories=null;const all=[];for(const activity of activities){const calorieNode=[...activity.getElementsByTagNameNS("*","Calories")][0];if(calorieNode){const value=Number(calorieNode.textContent);if(Number.isFinite(value)&&value>0)calories=value}const tracks=[...activity.getElementsByTagNameNS("*","Track")];for(const track of tracks)for(const n of [...track.getElementsByTagNameNS("*","Trackpoint")]){
-  const get=t=>{const e=[...n.getElementsByTagNameNS("*",t)][0];return e?e.textContent.trim():null};
-  const time=get("Time"),lat=get("LatitudeDegrees"),lon=get("LongitudeDegrees"),alt=get("AltitudeMeters"),dist=get("DistanceMeters");
-  const hrNodes=[...n.getElementsByTagNameNS("*","HeartRateBpm")],hr=hrNodes[0]?[...hrNodes[0].getElementsByTagNameNS("*","Value")][0]?.textContent:null;
-  const cad=get("Cadence"),ms=time?Date.parse(time):NaN;if(!Number.isFinite(ms))continue;
-  all.push({t:ms,lat:lat===null?null:Number(lat),lon:lon===null?null:Number(lon),alt:alt===null?null:Number(alt),dist:dist===null?null:Number(dist),hr:hr===null?null:Number(hr),cad:cad===null?null:Number(cad)});
- }}
+ const all=[],laps=[];let calories=null,lapIndex=0;
+ for(const activity of activities){
+  const calorieNode=[...activity.getElementsByTagNameNS("*","Calories")].find(n=>n.parentElement?.localName==="Lap"||n.parentElement===activity);
+  if(calorieNode){const v=Number(calorieNode.textContent);if(Number.isFinite(v)&&v>0)calories=(calories||0)+v}
+  const lapNodes=[...activity.getElementsByTagNameNS("*","Lap")].filter(n=>n.parentElement===activity);
+  const selected=lapNodes.length?lapNodes:[activity];
+  for(const lap of selected){
+   const directText=(el,tag)=>[...el.children].find(c=>c.localName===tag)?.textContent?.trim()??null;
+   const rawLapDistance=directText(lap,"DistanceMeters"),lapDistance=rawLapDistance===null?null:Number(rawLapDistance);
+   const trackpoints=[...lap.getElementsByTagNameNS("*","Trackpoint")];
+   const lapPts=[];
+   for(const n of trackpoints){
+    const get=t=>{const e=[...n.getElementsByTagNameNS("*",t)][0];return e?e.textContent.trim():null};
+    const time=get("Time"),lat=get("LatitudeDegrees"),lon=get("LongitudeDegrees"),alt=get("AltitudeMeters"),dist=get("DistanceMeters");
+    const hrNodes=[...n.getElementsByTagNameNS("*","HeartRateBpm")],hr=hrNodes[0]?[...hrNodes[0].getElementsByTagNameNS("*","Value")][0]?.textContent:null;
+    const cad=get("Cadence"),ms=time?Date.parse(time):NaN;if(!Number.isFinite(ms))continue;
+    const p={t:ms,lat:lat===null?null:Number(lat),lon:lon===null?null:Number(lon),alt:alt===null?null:Number(alt),dist:dist===null?null:Number(dist),hr:hr===null?null:Number(hr),cad:cad===null?null:Number(cad),lapIndex,cum:null};
+    all.push(p);lapPts.push(p);
+   }
+   laps.push({index:lapIndex,distance:Number.isFinite(lapDistance)&&lapDistance>0?lapDistance:null,points:lapPts});lapIndex++;
+  }
+ }
  all.sort((a,b)=>a.t-b.t);if(all.length<2)throw Error("Not enough timestamped trackpoints.");
  const pts=[];for(const p of all){if(!pts.length||p.t>pts[pts.length-1].t)pts.push(p)}if(pts.length<2)throw Error("Not enough unique timestamps.");
- let gps=0;for(let i=1;i<pts.length;i++){const a=pts[i-1],b=pts[i];if(validGPS(a)&&validGPS(b)){const d=haversine(a.lat,a.lon,b.lat,b.lon);if(d<100)gps+=d}}
- const dp=pts.filter(p=>Number.isFinite(p.dist)&&p.dist>=0);let tcxDist=dp.length>1?dp[dp.length-1].dist-dp[0].dist:0;
- let distance=tcxDist>10?tcxDist:gps;if(!(distance>10))throw Error("No reliable distance data found in this file.");
- const useTCX=tcxDist>10;let cum=0;pts[0].cum=0;
- for(let i=1;i<pts.length;i++){const a=pts[i-1],b=pts[i];let inc=0;if(useTCX&&Number.isFinite(a.dist)&&Number.isFinite(b.dist)&&b.dist>=a.dist)inc=b.dist-a.dist;else if(validGPS(a)&&validGPS(b)){inc=haversine(a.lat,a.lon,b.lat,b.lon);if(inc>100)inc=0}cum+=inc;b.cum=cum}
- if(cum>0&&Math.abs(cum-distance)/distance>.2){const factor=distance/cum;for(const p of pts)p.cum*=factor}
+ const summaryValid=laps.length>0&&laps.every(l=>Number.isFinite(l.distance)&&l.distance>0);
+ const lapSummaryDistance=summaryValid?laps.reduce((sum,l)=>sum+l.distance,0):null;
+ let trackpointDistance=0,trackpointValid=laps.length>0;
+ for(const lap of laps){
+  const values=lap.points.map(p=>p.dist).filter(v=>Number.isFinite(v)&&v>=0);
+  if(values.length<2||values[values.length-1]<values[0]){trackpointValid=false;continue}
+  const delta=values[values.length-1]-values[0];if(!(delta>0)){trackpointValid=false;continue}trackpointDistance+=delta;
+ }
+ if(!trackpointValid||!(trackpointDistance>10))trackpointDistance=null;
+ let gpsDistance=0;for(let i=1;i<pts.length;i++){const a=pts[i-1],b=pts[i];if(validGPS(a)&&validGPS(b)){const d=haversine(a.lat,a.lon,b.lat,b.lon);if(d>0&&d<100)gpsDistance+=d}}
+ const useTrackpoint=trackpointDistance!==null;
+ let offset=0;
+ for(const lap of laps){
+  const values=lap.points.map(p=>p.dist).filter(v=>Number.isFinite(v)&&v>=0),first=values.length?values[0]:null;
+  const delta=values.length>=2&&values[values.length-1]>=first?values[values.length-1]-first:0;
+  for(const p of lap.points)p.cum=useTrackpoint&&first!==null&&Number.isFinite(p.dist)&&p.dist>=first?offset+p.dist-first:null;
+  offset+=delta;
+ }
+ if(!useTrackpoint){let gpsCum=0;for(let i=0;i<pts.length;i++){if(i){const a=pts[i-1],b=pts[i];if(validGPS(a)&&validGPS(b)){const d=haversine(a.lat,a.lon,b.lat,b.lon);if(d>0&&d<100)gpsCum+=d}}pts[i].cum=gpsCum}}
+ const distance=lapSummaryDistance??(trackpointDistance!==null?trackpointDistance:gpsDistance);
+ if(!(distance>10))throw Error("No reliable distance data found in this file.");
  const first=pts[0],last=pts[pts.length-1],duration=(last.t-first.t)/1000;if(duration<=0)throw Error("Invalid activity duration.");
- let ascent=0;for(let i=1;i<pts.length;i++){const a=pts[i-1].alt,b=pts[i].alt;if(Number.isFinite(a)&&Number.isFinite(b)&&b>a&&b-a<30)ascent+=b-a}
+ let ascent=0;for(let i=1;i<pts.length;i++)if(Number.isFinite(pts[i].alt)&&Number.isFinite(pts[i-1].alt)&&pts[i].alt>pts[i-1].alt&&pts[i].alt-pts[i-1].alt<30)ascent+=pts[i].alt-pts[i-1].alt;
  const hrs=pts.map(p=>p.hr).filter(x=>Number.isFinite(x)&&x>=30&&x<=240),cads=pts.map(p=>p.cad).filter(x=>Number.isFinite(x)&&x>0&&x<250);
- const splits=makeSplits(pts,distance),track=[];
- return {id:makeId(),name:name.replace(/\.tcx$/i,""),date:new Date(first.t).toISOString(),start:first.t,end:last.t,distance,duration,pace:duration/(distance/1000),avgHr:hrs.length?hrs.reduce((a,b)=>a+b,0)/hrs.length:null,maxHr:hrs.length?Math.max(...hrs):null,avgCad:cads.length?cads.reduce((a,b)=>a+b,0)/cads.length:null,calories,elevation:ascent,points:pts.map(p=>({t:p.t,dist:p.cum,alt:p.alt,hr:p.hr,cad:p.cad})),track,splits,source:"TCX"};
+ const splits=makeSplits(pts,trackpointDistance??gpsDistance),track=[];
+ return {id:makeId(),name:name.replace(/\.tcx$/i,""),date:new Date(first.t).toISOString(),start:first.t,end:last.t,distance,lapSummaryDistance,trackpointDistance:trackpointDistance??0,gpsDistance,duration,pace:duration/(distance/1000),avgHr:hrs.length?hrs.reduce((a,b)=>a+b,0)/hrs.length:null,maxHr:hrs.length?Math.max(...hrs):null,avgCad:cads.length?cads.reduce((a,b)=>a+b,0)/cads.length:null,calories,elevation:ascent,points:pts.map(p=>({t:p.t,dist:p.cum,sourceDist:p.dist,alt:p.alt,hr:p.hr,cad:p.cad})),track,splits,source:"TCX"};
 }
 function validGPS(p){return Number.isFinite(p.lat)&&Number.isFinite(p.lon)&&Math.abs(p.lat)<=90&&Math.abs(p.lon)<=180}
 function makeId(){return crypto.randomUUID?crypto.randomUUID():String(Date.now())+"-"+Math.random().toString(36).slice(2)}
@@ -448,7 +478,7 @@ function makeSplits(pts,total){const out=[];let next=1000,prevT=pts[0].t,prevD=p
 function uploadDialog(){let el=byId("uploadProgressModal");if(!el){el=document.createElement("div");el.id="uploadProgressModal";el.className="modal";el.innerHTML='<div class="modalbox upload-progress-box"><div class="modalhead"><div><div class="kicker">RUNTRACK CLOUD UPLOAD</div><h2 id="uploadProgressTitle">Preparing your activities</h2><div class="sub" id="uploadProgressDetail">Reading TCX files…</div></div><span class="pill" id="uploadProgressState">IN PROGRESS</span></div><div class="upload-progress-number"><strong id="uploadProgressPercent">0%</strong><span id="uploadProgressCount">0 of 0 files</span></div><div class="bar upload-progress-track"><i id="uploadProgressBar" style="width:0%"></i></div><div class="upload-progress-meta"><span id="uploadProgressCurrent">Waiting for files…</span><span id="uploadProgressRemaining">Calculating…</span></div><div class="upload-progress-foot" id="uploadProgressFoot">Keep this tab open until cloud backup is confirmed.</div></div>';document.body.appendChild(el)}el.classList.add("open");return el}
 function updateUploadProgress(percent,count,total,current,detail,remaining,state){const p=Math.max(0,Math.min(100,Math.round(percent)));const set=(id,v)=>{const n=byId(id);if(n)n.textContent=v};set("uploadProgressPercent",p+"%");set("uploadProgressCount",count+" of "+total+" files");set("uploadProgressCurrent",current||"");set("uploadProgressDetail",detail||"");set("uploadProgressRemaining",remaining||"");set("uploadProgressState",state||"IN PROGRESS");const bar=byId("uploadProgressBar");if(bar)bar.style.width=p+"%";const title=byId("uploadProgressTitle");if(title)title.textContent=state==="COMPLETE"?"Upload complete":state==="ERROR"?"Upload needs attention":"Uploading your activities"}
 function closeUploadProgress(){const el=byId("uploadProgressModal");if(el)el.classList.remove("open")}
-async function importFiles(fileList){const files=[...fileList].filter(f=>/\.tcx$/i.test(f.name));const total=files.length;if(!total){toast("Please select TCX files.");return}uploadDialog();let added=0,skipped=0,failed=0;const started=Date.now();updateUploadProgress(2,0,total,"Preparing files","Checking selected TCX files…","—");for(let i=0;i<total;i++){const file=files[i];try{updateUploadProgress(5+Math.round(i/total*25),i,total,file.name,"Reading and analysing file "+(i+1)+" of "+total,"Please wait…");const xml=await file.text();const r=parseTCX(xml,file.name),dup=runs.some(x=>Math.abs((x.start||Date.parse(x.date))-(r.start||0))<2000&&Math.abs((x.distance||0)-r.distance)<30);if(dup)skipped++;else{runs.push(r);added++}}catch(e){failed++;console.warn("TCX import failed:",file.name,e);toast(file.name+": "+e.message)}updateUploadProgress(5+Math.round((i+1)/total*30),i+1,total,file.name,"Processed "+(i+1)+" of "+total+" files","Preparing cloud upload…")}
+async function importFiles(fileList){const files=[...fileList].filter(f=>/\.tcx$/i.test(f.name));const total=files.length;if(!total){toast("Please select TCX files.");return}uploadDialog();let added=0,skipped=0,failed=0;const started=Date.now();updateUploadProgress(2,0,total,"Preparing files","Checking selected TCX files…","—");for(let i=0;i<total;i++){const file=files[i];try{updateUploadProgress(5+Math.round(i/total*25),i,total,file.name,"Reading and analysing file "+(i+1)+" of "+total,"Please wait…");const xml=await file.text();const r=parseTCX(xml,file.name),sameStart=runs.findIndex(x=>Math.abs((x.start||Date.parse(x.date))-(r.start||0))<2000),sameName=sameStart>=0&&runs[sameStart].name===r.name,dup=sameStart>=0&&Math.abs((runs[sameStart].distance||0)-r.distance)<30;if(dup)skipped++;else if(sameName){runs[sameStart]={...r,id:runs[sameStart].id};added++;}else{runs.push(r);added++}}catch(e){failed++;console.warn("TCX import failed:",file.name,e);toast(file.name+": "+e.message)}updateUploadProgress(5+Math.round((i+1)/total*30),i+1,total,file.name,"Processed "+(i+1)+" of "+total+" files","Preparing cloud upload…")}
 if(!added){updateUploadProgress(100,total,total,"No new activities","All selected files were duplicates or could not be read.","0 remaining",failed?"ERROR":"COMPLETE");if(!failed)setTimeout(closeUploadProgress,1600);else setTimeout(closeUploadProgress,2600);if(skipped)toast("No new runs imported ("+skipped+" duplicate files skipped).");return}
 persistLocal();renderAll();if(!sharedCloudReady){sharedCloudDirty=true;updateUploadProgress(38,total,total,"Waiting for cloud connection","Activities saved on this device. Waiting for cloud…","Cloud connection pending");setCloudStatus("● SAVING CLOUD…","Waiting to upload "+added+" new activities");const waitStart=Date.now();while(!sharedCloudReady&&Date.now()-waitStart<25000)await new Promise(r=>setTimeout(r,250))}
 if(sharedCloudReady){const saved=await saveSharedCloud(true,p=>{const pct=35+Math.round(p*.6);updateUploadProgress(pct,total,total,"Uploading "+added+" new activities","Sending activity data securely to RunTrack cloud",p>=100?"Confirming cloud save…":"Upload in progress…");});if(saved){updateUploadProgress(100,total,total,"Cloud backup confirmed","Successfully saved "+added+" new activities. "+skipped+" duplicates skipped.", "0 remaining","COMPLETE");toast("Imported "+added+" activit"+(added===1?"y":"ies")+" · cloud backup confirmed.");}else{updateUploadProgress(95,total,total,"Cloud save failed","Activities are saved locally, but cloud confirmation failed.","Retry required","ERROR");toast("Imported locally, but cloud save failed. Keep this tab open and retry.");}}else{updateUploadProgress(95,total,total,"Cloud is still connecting","Activities are saved locally. Cloud upload will retry when connected.","Waiting for connection","ERROR");toast("Activities imported locally; cloud is still connecting.")}
