@@ -60,6 +60,10 @@ export interface Workout {
   elapsedSeconds: number;
   /** Sum of Lap/TotalTimeSeconds when available, otherwise elapsed time. */
   timerSeconds: number;
+  /** Canonical total workout distance: valid Lap summaries first, then trackpoint/GPS fallback. */
+  distanceM: number;
+  /** Independent coordinate-derived route distance; never scaled to match the summary. */
+  gpsDistanceM: number;
   lapSummaryDistanceM: number | null;
   trackpointDistanceM: number;
   calories: number | null;
