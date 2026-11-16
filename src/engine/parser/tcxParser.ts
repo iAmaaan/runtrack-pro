@@ -181,7 +181,8 @@ export function parseTcx(xmlText: string, sourceFileName = "activity.tcx"): Work
         ? values[values.length - 1] - values[0] : null;
     });
     const trackpointValid = lapTrackDistances.length > 0 && lapTrackDistances.every(v => v !== null && v > 0);
-    const trackDistanceValid = trackpointValid;\n    const trackDistance = trackpointValid ? lapTrackDistances.reduce((sum, v) => sum + (v ?? 0), 0) : 0;
+    const trackDistanceValid = trackpointValid;
+    const trackDistance = trackpointValid ? lapTrackDistances.reduce((sum, v) => sum + (v ?? 0), 0) : 0;
     let gpsDistance = 0;
     for (let i = 1; i < points.length; i++) {
       const a = points[i - 1], b = points[i];
